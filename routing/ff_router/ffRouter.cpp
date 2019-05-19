@@ -304,7 +304,7 @@ bool FFRouter::Init(Building* building)
                               _penaltyList.emplace_back(std::make_pair(uid1, uid2));
                          } else {
                               int room1 = door->GetRoom1()->GetID();
-                              int room2 = otherRoom->GetID();
+                              int room2 = door->GetRoom2()->GetID();;
 
                               int otherRoom1 = other->GetRoom1()->GetID();
                               int otherRoom2 = other->GetRoom2()->GetID();
