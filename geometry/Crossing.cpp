@@ -394,8 +394,6 @@ std::string Crossing::toString() const
      case DoorState::ONE_DIR:
           tmp << " one_dir";
           break;
-
-
      }
      return tmp.str();
 }

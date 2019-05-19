@@ -307,6 +307,7 @@ public:
      bool AddHline(Hline* line);
      void AddNeighbor(SubRoom* sub);
 
+     const std::vector<Crossing*> GetAllDoors() const;
      const std::vector<Crossing*>& GetAllCrossings() const;
      const std::vector<Transition*>& GetAllTransitions() const;
      const std::vector<Hline*>& GetAllHlines() const;

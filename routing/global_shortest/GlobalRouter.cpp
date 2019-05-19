@@ -388,6 +388,16 @@ bool GlobalRouter::Init(Building* building)
           }
      }
 
+
+
+     std::cout << "Dist matrix: " << std::endl;
+     for (int i=0; i<exitsCnt; ++i) {
+          for (int j = 0; j<exitsCnt; ++j) {
+               std::cout << setw(8) <<  _distMatrix[i][j] << "\t";
+          }
+          std::cout << std::endl;
+     }
+
      //run the floyd warshall algorithm
      FloydWarshall();
 
@@ -514,15 +524,37 @@ bool GlobalRouter::Init(Building* building)
           }
      }
 
-     //dumping the complete system
-     //DumpAccessPoints(15); exit(0);
-     //DumpAccessPoints(1259);
-     //DumpAccessPoints(4912); //exit(0);
-     //DumpAccessPoints(-1); exit(0);
-     //vector<string> rooms;
-     //rooms.push_back("Verteilerebene");
-     //WriteGraphGV("routing_graph.gv",FINAL_DEST_OUT,rooms); exit(0);
-     //WriteGraphGV("routing_graph.gv",4,rooms);exit(0);
+     // deal with one directional doors
+     for(const auto & itr1: _accessPoints) {
+          AccessPoint* ap = itr1.second;
+
+          if (ap->GetState() == DoorState::ONE_DIR){
+               int from_door= _map_id_to_index[ap->GetID()];
+               std::cout << "AP: " << ap->GetFriendlyName() << " one dir " << from_door << std::endl;
+               std::cout << "Room1: " << ap->GetConnectingRoom1() << std::endl;
+               std::cout << "Room2: " << ap->GetConnectingRoom2() << std::endl;
+               std::cout << "ID: " << ap->GetID() << std::endl;
+               int room1 = ap->GetConnectingRoom1();
+
+
+               for (auto other : ap->GetConnectingAPs()){
+                    if ((room1 == other->GetConnectingRoom1() ||  room1 == other->GetConnectingRoom2())){
+                         continue;
+                    }
+                    int to_door= _map_id_to_index[other->GetID()];
+                    _distMatrix[from_door][to_door] = std::numeric_limits<double>::max();
+               }
+
+          }
+     }
+
+     std::cout << "Dist matrix: " << std::endl;
+     for (int i=0; i<exitsCnt; ++i) {
+          for (int j = 0; j<exitsCnt; ++j) {
+               std::cout << setw(8) <<  _distMatrix[i][j] << "\t";
+          }
+          std::cout << std::endl;
+     }
      Log->Write("INFO:\tDone with the Global Router Engine!");
      return true;
 }

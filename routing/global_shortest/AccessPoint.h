@@ -76,7 +76,6 @@ public:
       * given the actual room of the pedestrian
       * determine if that AP is 'visible'
       */
-
      bool isInRange(int roomID);
 
      /**
