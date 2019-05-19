@@ -316,12 +316,8 @@ bool FFRouter::Init(Building* building)
                               int uid1 = door->GetUniqueID();
                               int uid2 = other->GetUniqueID();
                               _penaltyList.emplace_back(std::make_pair(uid2, uid1));
-
                          }
-
                     }
-
-
                }
           }
      }
