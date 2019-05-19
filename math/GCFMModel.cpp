@@ -446,7 +446,7 @@ inline Point GCFMModel::ForceRepRoom(Pedestrian* ped, SubRoom* subroom) const
      // and finally the closed doors
      for(auto & goal: subroom->GetAllTransitions())
      {
-          if(! goal->IsOpen())
+          if(! goal->IsOpen(ped->GetRoomID(), ped->GetSubRoomID()))
           {
                f +=  ForceRepWall(ped,*(static_cast<Line*>(goal)));
           }
