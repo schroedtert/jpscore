@@ -388,23 +388,45 @@ bool GlobalRouter::Init(Building* building)
           }
      }
 
+     // deal with one directional doors
+     for(const auto & itr1: _accessPoints) {
+          AccessPoint* ap = itr1.second;
 
+          if (ap->GetState() == DoorState::ONE_DIR){
+               int from_door= _map_id_to_index[ap->GetID()];
+               Transition* door = _building->GetTransitionByUID(ap->GetID());
+               int room1 = door->GetRoom1()->GetID();
+               int room2 = door->GetRoom2()->GetID();;
 
-     std::cout << "Dist matrix: " << std::endl;
-     for (int i=0; i<exitsCnt; ++i) {
-          for (int j = 0; j<exitsCnt; ++j) {
-               std::cout << setw(8) <<  _distMatrix[i][j] << "\t";
+               for (auto other : ap->GetConnectingAPs()){
+
+                    Transition* otherDoor = _building->GetTransitionByUID(other->GetID());
+                    int otherRoom1 = otherDoor->GetRoom1()->GetID();
+                    int otherRoom2 = otherDoor->GetRoom2()->GetID();
+
+                    if (room1 == otherRoom1 || room1 == otherRoom2){
+                         if (otherDoor->IsExit()){
+                              int to_door= _map_id_to_index[other->GetID()];
+                              _distMatrix[from_door][to_door] = std::numeric_limits<double>::max();
+                         } else {
+                              if ((room1 == otherRoom1 || room1 == otherRoom2)
+                                        && (room2 == otherRoom1 || room2 == otherRoom2)){
+                                   continue;
+                              }
+                              int to_door= _map_id_to_index[other->GetID()];
+                              _distMatrix[from_door][to_door] = std::numeric_limits<double>::max();
+                         }
+
+                    }
+               }
           }
-          std::cout << std::endl;
      }
 
      //run the floyd warshall algorithm
      FloydWarshall();
 
-
      // set the configuration for reaching the outside
      // set the distances to all final APs
-
      for(const auto & itr: _accessPoints)
      {
           AccessPoint* from_AP = itr.second;
@@ -524,37 +546,7 @@ bool GlobalRouter::Init(Building* building)
           }
      }
 
-     // deal with one directional doors
-     for(const auto & itr1: _accessPoints) {
-          AccessPoint* ap = itr1.second;
 
-          if (ap->GetState() == DoorState::ONE_DIR){
-               int from_door= _map_id_to_index[ap->GetID()];
-               std::cout << "AP: " << ap->GetFriendlyName() << " one dir " << from_door << std::endl;
-               std::cout << "Room1: " << ap->GetConnectingRoom1() << std::endl;
-               std::cout << "Room2: " << ap->GetConnectingRoom2() << std::endl;
-               std::cout << "ID: " << ap->GetID() << std::endl;
-               int room1 = ap->GetConnectingRoom1();
-
-
-               for (auto other : ap->GetConnectingAPs()){
-                    if ((room1 == other->GetConnectingRoom1() ||  room1 == other->GetConnectingRoom2())){
-                         continue;
-                    }
-                    int to_door= _map_id_to_index[other->GetID()];
-                    _distMatrix[from_door][to_door] = std::numeric_limits<double>::max();
-               }
-
-          }
-     }
-
-     std::cout << "Dist matrix: " << std::endl;
-     for (int i=0; i<exitsCnt; ++i) {
-          for (int j = 0; j<exitsCnt; ++j) {
-               std::cout << setw(8) <<  _distMatrix[i][j] << "\t";
-          }
-          std::cout << std::endl;
-     }
      Log->Write("INFO:\tDone with the Global Router Engine!");
      return true;
 }
