@@ -282,25 +282,18 @@ bool FFRouter::Init(Building* building)
          }
      }
 
-     std::cout << std::endl;
-
      // Deal with directional doors
      for (auto iter : _building->GetAllTransitions()){
           Transition* door = iter.second;
-          std::cout << door->GetUniqueID() << " " << door->toString() << std::endl;
           if (door->IsOneDir()){
-               std::cout << "Door: " << door->toString() << std::endl;
-
                Room* otherRoom = door->GetRoom1();
 
                for (auto iterOther : _building->GetAllTransitions()){
                     Transition* other = iterOther.second;
 
                     if (other->IsInRoom(otherRoom->GetID())){
-                         std::cout << "Check: " << other->toString() << std::endl;
                          //check if door ID == other ID, skip
                          if (door->GetID() == other->GetID() ){
-                              std::cout<< "Failed ID==ID" << std::endl;
                               continue;
                          }
 
@@ -318,7 +311,6 @@ bool FFRouter::Init(Building* building)
 
                               if ((room1 == otherRoom1 || room1 == otherRoom2)
                                         && (room2 == otherRoom1 || room2 == otherRoom2)){
-                                   std::cout << "Failed same room" << std::endl;
                                    continue;
                               }
                               int uid1 = door->GetUniqueID();
@@ -335,7 +327,6 @@ bool FFRouter::Init(Building* building)
      }
 
      for (auto key : _penaltyList) {
-          std::cout << "Penalty: " << key.first << "->" << key.second << std::endl;
           _distMatrix.erase(key);
           _distMatrix.insert(std::make_pair(key, DBL_MAX));
      }
