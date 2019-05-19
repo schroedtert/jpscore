@@ -251,9 +251,10 @@ bool FFRouter::Init(Building* building)
           } // otherDoor
      } // roomAndCroTrVector
 
+     _penaltyList.clear();
+     // Deal with directional elevators
      if (_config->get_has_directional_escalators()) {
          _directionalEscalatorsUID.clear();
-         _penaltyList.clear();
          for (auto room : building->GetAllRooms()) {
              for (auto subroom : room.second->GetAllSubRooms()) {
                  if ((subroom.second->GetType() == "escalator_up") || (subroom.second->GetType() == "escalator_down")) {
@@ -279,11 +280,66 @@ bool FFRouter::Init(Building* building)
                  }
              }
          }
-         for (auto key : _penaltyList) {
-             _distMatrix.erase(key);
-             _distMatrix.insert(std::make_pair(key, DBL_MAX));
-         }
      }
+
+     std::cout << std::endl;
+
+     // Deal with directional doors
+     for (auto iter : _building->GetAllTransitions()){
+          Transition* door = iter.second;
+          std::cout << door->GetUniqueID() << " " << door->toString() << std::endl;
+          if (door->IsOneDir()){
+               std::cout << "Door: " << door->toString() << std::endl;
+
+               Room* otherRoom = door->GetRoom1();
+
+               for (auto iterOther : _building->GetAllTransitions()){
+                    Transition* other = iterOther.second;
+
+                    if (other->IsInRoom(otherRoom->GetID())){
+                         std::cout << "Check: " << other->toString() << std::endl;
+                         //check if door ID == other ID, skip
+                         if (door->GetID() == other->GetID() ){
+                              std::cout<< "Failed ID==ID" << std::endl;
+                              continue;
+                         }
+
+                         // check if door
+                         if (other->IsExit()){
+                              int uid1 = door->GetUniqueID();
+                              int uid2 = other->GetUniqueID();
+                              _penaltyList.emplace_back(std::make_pair(uid1, uid2));
+                         } else {
+                              int room1 = door->GetRoom1()->GetID();
+                              int room2 = otherRoom->GetID();
+
+                              int otherRoom1 = other->GetRoom1()->GetID();
+                              int otherRoom2 = other->GetRoom2()->GetID();
+
+                              if ((room1 == otherRoom1 || room1 == otherRoom2)
+                                        && (room2 == otherRoom1 || room2 == otherRoom2)){
+                                   std::cout << "Failed same room" << std::endl;
+                                   continue;
+                              }
+                              int uid1 = door->GetUniqueID();
+                              int uid2 = other->GetUniqueID();
+                              _penaltyList.emplace_back(std::make_pair(uid2, uid1));
+
+                         }
+
+                    }
+
+
+               }
+          }
+     }
+
+     for (auto key : _penaltyList) {
+          std::cout << "Penalty: " << key.first << "->" << key.second << std::endl;
+          _distMatrix.erase(key);
+          _distMatrix.insert(std::make_pair(key, DBL_MAX));
+     }
+
 
      FloydWarshall();
 
