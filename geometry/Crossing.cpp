@@ -81,7 +81,6 @@ bool Crossing::IsExit() const
      return false;
 }
 
-
 bool Crossing::IsOpen() const
 {
      return _state == DoorState::OPEN;
@@ -95,6 +94,40 @@ bool Crossing::IsClose() const
 bool Crossing::IsTempClose() const
 {
      return _state == DoorState::TEMP_CLOSE;
+}
+
+bool Crossing::IsOneDir() const
+{
+     return _state == DoorState::ONE_DIR;
+}
+
+
+bool Crossing::IsOpen(int roomID, int subroomID) const
+{
+     return checkOneDir(roomID, subroomID) == DoorState::OPEN;
+}
+
+bool Crossing::IsClose(int roomID, int subroomID) const
+{
+     return checkOneDir(roomID, subroomID) == DoorState::CLOSE;
+}
+
+bool Crossing::IsTempClose(int roomID, int subroomID) const
+{
+     return checkOneDir(roomID, subroomID) == DoorState::TEMP_CLOSE;
+}
+
+DoorState Crossing::checkOneDir(int roomID, int subroomID) const
+{
+     if (_state == DoorState::ONE_DIR){
+          if (roomID == _room1->GetID() && subroomID == _subRoom1->GetSubRoomID()){
+               return DoorState::OPEN;
+          }else{
+               return DoorState::CLOSE;
+          }
+     }else{
+          return _state;
+     }
 }
 
 bool Crossing::IsTransition() const
@@ -112,6 +145,10 @@ void Crossing::TempClose()
      _state = DoorState::TEMP_CLOSE;
 }
 
+void Crossing::OneDir()
+{
+     _state = DoorState::ONE_DIR;
+}
 
 void Crossing::Open()
 {
@@ -342,7 +379,6 @@ void Crossing::SetState(DoorState _state)
 std::string Crossing::toString() const
 {
      std::stringstream tmp;
-//     tmp << _point1.toString() << "--" << _point2.toString();
 
      tmp << this->GetPoint1().toString() << "--" << this->GetPoint2().toString();
      switch (_state){
@@ -355,6 +391,10 @@ std::string Crossing::toString() const
      case DoorState::TEMP_CLOSE:
           tmp << " temp_close";
           break;
+     case DoorState::ONE_DIR:
+          tmp << " one_dir";
+          break;
+
 
      }
      return tmp.str();

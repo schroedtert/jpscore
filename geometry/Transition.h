@@ -88,6 +88,9 @@ public:
 
     virtual void WriteToErrorLog() const;
     virtual std::string GetDescription() const; // TraVisTo Ausgabe
+
+    virtual DoorState checkOneDir(int roomID, int subroomID) const;
+
 };
 
 #endif  /* _TRANSITION_H */
