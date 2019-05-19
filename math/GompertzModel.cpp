@@ -400,7 +400,7 @@ Point GompertzModel::ForceRepRoom(Pedestrian *ped, SubRoom *subroom) const {
 
     // and finally the closed doors
     for (const auto &goal: subroom->GetAllTransitions()) {
-        if (!goal->IsOpen()) {
+        if (!goal->IsOpen(ped->GetRoomID(), ped->GetSubRoomID())) {
             f += ForceRepWall(ped, *(static_cast<Line *>(goal)), centroid, inside);
         }
         //  int uid1= goal->GetUniqueID();
