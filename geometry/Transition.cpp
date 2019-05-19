@@ -192,7 +192,7 @@ DoorState Transition::checkOneDir(int roomID, int subroomID) const
 {
      DoorState state = this->GetState();
      if (state == DoorState::ONE_DIR){
-          if (roomID == _room1->GetID() && subroomID == _subRoom1->GetSubRoomID()){
+          if (roomID == _room1->GetID()){
                return DoorState::OPEN;
           }else{
                return DoorState::CLOSE;
