@@ -93,9 +93,14 @@ public:
     void TempClose();
 
     /**
-     * Allows one directional flow through door
+     * Allows one directional flow through door, ped look for different way
      */
     void OneDir();
+
+    /**
+     * Allows one directional flow through door, ped wait from other direction
+     */
+    void OneDirTemp();
 
     /**
      * Open the door
@@ -141,6 +146,11 @@ public:
     * @return true if the state == ONE_DIR
     */
     virtual bool IsOneDir() const;
+
+    /**
+    * @return true if the state == ONE_DIR_TEMP
+    */
+    virtual bool IsOneDirTemp() const;
 
     /**
       * @return true if the crossing is an exit/transition. (Transitions are derived from this class)

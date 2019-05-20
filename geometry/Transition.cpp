@@ -191,14 +191,24 @@ string Transition::GetDescription() const
 DoorState Transition::checkOneDir(int roomID, int subroomID) const
 {
      DoorState state = this->GetState();
+
      if (state == DoorState::ONE_DIR){
-          if (roomID == _room1->GetID()){
+          if (roomID == _room1->GetID() ){
                return DoorState::OPEN;
           }else{
                return DoorState::CLOSE;
           }
-     }else{
-          return state;
      }
+
+     if (state == DoorState::ONE_DIR_TEMP){
+          if (roomID == _room1->GetID()){
+               return DoorState::OPEN;
+          }else{
+               return DoorState::TEMP_CLOSE;
+          }
+     }
+
+     return state;
+
 }
 

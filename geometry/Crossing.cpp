@@ -101,6 +101,10 @@ bool Crossing::IsOneDir() const
      return _state == DoorState::ONE_DIR;
 }
 
+bool Crossing::IsOneDirTemp() const
+{
+     return _state == DoorState::ONE_DIR_TEMP;
+}
 
 bool Crossing::IsOpen(int roomID, int subroomID) const
 {
@@ -125,9 +129,17 @@ DoorState Crossing::checkOneDir(int roomID, int subroomID) const
           }else{
                return DoorState::CLOSE;
           }
-     }else{
-          return _state;
      }
+
+     if (_state == DoorState::ONE_DIR_TEMP){
+          if (roomID == _room1->GetID() && subroomID == _subRoom1->GetSubRoomID()){
+               return DoorState::OPEN;
+          }else{
+               return DoorState::TEMP_CLOSE;
+          }
+     }
+
+     return _state;
 }
 
 bool Crossing::IsTransition() const
@@ -149,6 +161,12 @@ void Crossing::OneDir()
 {
      _state = DoorState::ONE_DIR;
 }
+
+void Crossing::OneDirTemp()
+{
+     _state = DoorState::ONE_DIR_TEMP;
+}
+
 
 void Crossing::Open()
 {
