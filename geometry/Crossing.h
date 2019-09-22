@@ -29,6 +29,7 @@
 #include "Hline.h"
 
 class SubRoom;
+class Room;
 
 class Crossing : public Hline {
 private:

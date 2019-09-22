@@ -63,7 +63,7 @@ public:
      Room();
      Room(const Room& orig);
 
-     virtual ~Room();
+     ~Room() = default;
 
      /**
       * Set/Get the id of the room which is also used as index
@@ -167,5 +167,4 @@ public:
       * Used by MPI in the case each room should be written in a specific file
       */
      OutputHandler* GetOutputHandler() const;
-
 };

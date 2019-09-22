@@ -296,7 +296,7 @@ bool SubRoom::AddHline(Hline* line)
      return true;
 }
 
-const vector<Crossing*> SubRoom::GetAllDoors() const
+const std::vector<Crossing*> SubRoom::GetAllDoors() const
 {
      std::vector<Crossing*> ret(_crossings);
 

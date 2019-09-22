@@ -58,12 +58,6 @@ Room::Room(const Room& orig)
      _egressTime=orig.GetEgressTime();
 }
 
-Room::~Room()
-{
-     //for (unsigned int i = 0; i < _subRooms.size(); i++)
-          //delete _subRooms[i];
-}
-
 /*************************************************************
  Setter-Funktionen
  ************************************************************/
@@ -219,9 +213,7 @@ std::vector<Point> Room::GetBoundaryVertices() const
      }
 
     return std::vector<Point>{Point(xMin,yMin),Point(xMin,yMax),Point(xMax,yMax),Point(xMax,yMin)};
-
 }
-
 
 OutputHandler* Room::GetOutputHandler() const
 {

@@ -27,6 +27,7 @@
 #include "Crossing.h"
 
 #include "SubRoom.h"
+#include "Room.h"
 
 
 Crossing::Crossing()
@@ -448,7 +449,7 @@ std::string Crossing::toString() const
      case DoorState::ONE_DIR:
           tmp << " one_dir";
           break;
-     case DoorState::ONE_DIR_temp:
+     case DoorState::ONE_DIR_TEMP:
           tmp << " one_dir_temp";
           break;
      case DoorState::Error:
