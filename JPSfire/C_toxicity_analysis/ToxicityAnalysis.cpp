@@ -25,14 +25,14 @@
  *
  *
  **/
-
 #include "ToxicityAnalysis.h"
-#include "../../pedestrian/Pedestrian.h"
-#include "../generic/FDSMesh.h"
-#include "../generic/FDSMeshStorage.h"
-#include "../../tinyxml/tinyxml.h"
-#include <filesystem>
-namespace fs = std::filesystem;
+
+#include "general/Filesystem.h"
+#include "JPSfire/generic/FDSMesh.h"
+#include "JPSfire/generic/FDSMeshStorage.h"
+#include "pedestrian/Pedestrian.h"
+
+#include <tinyxml.h>
 
 
 ToxicityAnalysis::ToxicityAnalysis(const std::string & projectFileName, double fps):  _projectFileName(projectFileName), _fps(fps)
@@ -201,13 +201,13 @@ void ToxicityAnalysis::InitializeWriteOut()
      std::string ToxAnalysisXML =  "toxicity_output_" + p.stem().string() + p.extension().string();
      fs::path t(ToxAnalysisXML);
      t = p.parent_path() / t;
-     _outputhandler = std::make_shared<ToxicityOutputHandler>(t.string().c_str());
+     _outputhandler = std::make_shared<ToxicityOutputHandler>(t);
      _outputhandler->WriteToFileHeader();
 }
 
 void ToxicityAnalysis::WriteOutHazardAnalysis(const Pedestrian* p, double E, double FEC_Smoke, double O2, double CO2, double CO, double HCN, double HCL, double FED_In, double FIC_Im, double FIC_In, double T, double FED_Heat)
 {
-    string data;
+    std::string data;
     char tmp[CLENGTH] = "";
     //_fps = 1; // fixme: why 1?
     int frameNr = int(p->GetGlobalTime()/_fps);

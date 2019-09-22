@@ -24,23 +24,20 @@
  *
  *
  **/
-
+#include "Goal.h"
 
 #include "Point.h"
-#include "Goal.h"
 #include "Wall.h"
 #include "Crossing.h"
-
-using namespace std;
-
+#include "../pedestrian/Pedestrian.h"
 
 Goal::Goal()
 {
      _id=-1;
      _caption="Goal";
      _isFinalGoal=0;
-     _walls = vector<Wall > ();
-     _poly = vector<Point > ();
+     _walls = std::vector<Wall > ();
+     _poly = std::vector<Point > ();
      _crossing = new Crossing();
      _roomID = -1;
      _subRoomID = -1;
@@ -56,12 +53,12 @@ void Goal::AddWall(const Wall& w)
      _walls.push_back(w);
 }
 
-string Goal::GetCaption() const
+std::string Goal::GetCaption() const
 {
      return _caption;
 }
 
-void Goal::SetCaption(string caption)
+void Goal::SetCaption(std::string caption)
 {
      _caption = caption;
 }
@@ -77,14 +74,14 @@ void Goal::SetId(int id)
      _crossing->SetID(id);
 }
 
-const vector<Point>& Goal::GetPolygon() const
+const std::vector<Point>& Goal::GetPolygon() const
 {
      return _poly;
 }
 
-string Goal::Write()
+std::string Goal::Write()
 {
-     string s;
+     std::string s;
      Point pos;
 
      for (unsigned int j = 0; j < _walls.size(); j++) {
@@ -108,7 +105,7 @@ string Goal::Write()
      return s;
 }
 
-const vector<Wall>& Goal::GetAllWalls() const
+const std::vector<Wall>& Goal::GetAllWalls() const
 {
      return _walls;
 }
@@ -188,8 +185,8 @@ bool Goal::Contains(const Point& ped) const
 
 bool Goal::ConvertLineToPoly()
 {
-     vector<Line*> copy;
-     vector<Point> tmpPoly;
+     std::vector<Line*> copy;
+     std::vector<Point> tmpPoly;
      Point point;
      Line* line;
      // Alle Linienelemente in copy speichern
@@ -235,16 +232,17 @@ bool Goal::ConvertLineToPoly()
           tmp = _poly[_poly.size()/2];
           diff = point1 - tmp;
 
-          point1 = tmp +  diff * 0.95;
-          point2 = tmp +  diff * 0.05;
+          point1 = tmp +  diff * 0.51;
+          point2 = tmp +  diff * 0.49;
 
           _crossing->SetPoint1(point1);
           _crossing->SetPoint2(point2);
      }else{
           _crossing->SetPoint1(_poly[0]);
-          Line line(_poly[_poly.size()/2], _poly[(_poly.size()/2)+1], 0);
-          _crossing->SetPoint2(line.GetCentre());
+          Line tmp_line(_poly[_poly.size()/2], _poly[(_poly.size()/2)+1], 0);
+          _crossing->SetPoint2(tmp_line.GetCentre());
      }
+
 
 
 //     std::cout << "Crossing goal: " << _crossing->GetUniqueID() << _crossing->toString() << std::endl;
@@ -303,10 +301,13 @@ Crossing* Goal::GetCentreCrossing()
      return _crossing;
 }
 
-//bool Goal::IsInsideGoal(Pedestrian* ped) const
-//{
-//     return IsInsideGoal(ped->GetPos());
-//}
+bool Goal::IsInsideGoal(Pedestrian* ped) const
+{
+     if (_roomID == ped->GetRoomID() && _subRoomID == ped->GetSubRoomID()){
+          return IsInsideGoal(ped->GetPos());
+     }
+     return false;
+}
 
 bool Goal::IsInsideGoal(const Point& point) const
 {
@@ -352,9 +353,9 @@ int Goal::GetRoomID() const
      return _roomID;
 }
 
-void Goal::SetRoomID(int _roomID)
+void Goal::SetRoomID(int roomID)
 {
-     Goal::_roomID = _roomID;
+     _roomID = roomID;
 }
 
 int Goal::GetSubRoomID() const
@@ -362,7 +363,7 @@ int Goal::GetSubRoomID() const
      return _subRoomID;
 }
 
-void Goal::SetSubRoomID(int _subRoomID)
+void Goal::SetSubRoomID(int subRoomID)
 {
-     Goal::_subRoomID = _subRoomID;
+     _subRoomID = subRoomID;
 }

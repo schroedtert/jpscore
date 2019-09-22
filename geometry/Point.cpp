@@ -24,24 +24,15 @@
  *
  *
  **/
-
-
 #include "Point.h"
-#include "../general/Macros.h"
+
+#include "general/Macros.h"
+
+#include <sstream>
 
 /************************************************************
   Konstruktoren
  ************************************************************/
-
-Point::Point(const Point& orig) 
-{
-//     std::cout << "Point: " << toString() << std::endl;
-//     std::cout << "orig:  " << toString() << std::endl;
-
-     _x = orig._x;
-     _y = orig._y;
-}
-
 std::string Point::toString() const
 {
      std::stringstream tmp;
@@ -281,6 +272,17 @@ double Distance(const Point& point1, const Point& point2)
 {
      return boost::geometry::distance(point1, point2);
 }
+
+double Angle(const Point& point1, const Point& point2)
+{
+     double dot = point1.ScalarProduct(point2);
+     double n1 = point1.Norm();
+     double n2 = point2.Norm();
+
+     double cosTheta = dot/(n1*n2);
+     return acos(cosTheta);
+}
+
 
 //bool operator == (const Point& point1, const Point& point2)
 //{ return (  ( point1.x() == point2.x() )

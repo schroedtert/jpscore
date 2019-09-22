@@ -25,21 +25,16 @@
  * Implementation of classes for Generalized Centrifugal Force Model
  *
  **/
+#pragma once
+#include "OperationalModel.h"
 
-
-#ifndef GCFMMODEL_H_
-#define GCFMMODEL_H_
+#include "geometry/Building.h"
 
 #include <vector>
 
-#include "../geometry/Building.h"
-#include "OperationalModel.h"
-
-
-
 //forward declaration
 class Pedestrian;
-class DirectionStrategy;
+class DirectionManager;
 
 /*!
  * \class GCFMModel
@@ -54,12 +49,12 @@ class GCFMModel : public OperationalModel
 {
 public:
 
-    GCFMModel(std::shared_ptr<DirectionStrategy> dir, double nuped, double nuwall, double dist_effPed, double dist_effWall,
+    GCFMModel(std::shared_ptr<DirectionManager> dir, double nuped, double nuwall, double dist_effPed, double dist_effWall,
             double intp_widthped, double intp_widthwall, double maxfped, double maxfwall);
     virtual ~GCFMModel(void);
 
     // Getter
-    std::shared_ptr<DirectionStrategy> GetDirection() const;
+//    std::shared_ptr<DirectionStrategy> GetDirection() const;
     double GetNuPed() const;
     double GetNuWall() const;
     double GetDistEffMax() const;
@@ -127,6 +122,3 @@ private:
     Point ForceInterpolation(double v0, double K_ij, const Point& e, double v, double d, double r, double l) const;
 
 };
-
-
-#endif /* GCFMMODEL_H_ */

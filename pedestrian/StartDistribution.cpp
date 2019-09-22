@@ -24,14 +24,12 @@
  *
  *
  **/
-
-
 #include "StartDistribution.h"
+
 #include "AgentsParameters.h"
 #include "Pedestrian.h"
-#include "../geometry/SubRoom.h"
 
-using namespace std;
+#include "geometry/SubRoom.h"
 
 
 StartDistribution::StartDistribution(int seed)
@@ -70,7 +68,7 @@ StartDistribution::~StartDistribution()
 }
 
 
-std::default_random_engine StartDistribution::GetGenerator() 
+std::default_random_engine StartDistribution::GetGenerator()
 {
      return _generator;
 }
@@ -192,7 +190,7 @@ void StartDistribution::SetAgentsNumber(int N)
 }
 
 
-Pedestrian* StartDistribution::GenerateAgent(Building* building, int* pid, vector<Point>& positions)
+Pedestrian* StartDistribution::GenerateAgent(Building* building, int* pid, std::vector<Point>& positions)
 {
 
      Pedestrian* ped = new Pedestrian();
@@ -225,6 +223,7 @@ Pedestrian* StartDistribution::GenerateAgent(Building* building, int* pid, vecto
      E.DoStretch(_groupParameters->StretchEnabled());
      ped->SetEllipse(E);
      ped->SetTau(_groupParameters->GetTau());
+     ped->SetT(_groupParameters->GetT());
      ped->SetV0Norm(_groupParameters->GetV0(),
                     _groupParameters->GetV0UpStairs(),
                     _groupParameters->GetV0DownStairs(),

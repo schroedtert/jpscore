@@ -24,33 +24,18 @@
  *
  *
  **/
-// #ifndef _MSC_VER
-// #include <getopt.h>
-// #endif
+#include "ArgumentParser.h"
+
+#include "general/OpenMP.h"
+#include "general/Logger.h"
+#include "IO/IniFileParser.h"
+#include "IO/OutputHandler.h"
+#include "pedestrian/AgentsParameters.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-
-#ifdef _OPENMP
-
-#else
-#define omp_get_thread_num() 0
-#define omp_get_max_threads()  1
-#endif
-
-#include "../IO/OutputHandler.h"
-#include "ArgumentParser.h"
-#include "../pedestrian/AgentsParameters.h"
-#include "../routing/global_shortest/GlobalRouter.h"
-#include "../routing/quickest/QuickestPathRouter.h"
-#include "../routing/smoke_router/SmokeRouter.h"
-#include "../IO/IniFileParser.h"
-
-using namespace std;
-
-
-
 
 void ArgumentParser::Usage(const std::string file)
 {
@@ -76,16 +61,7 @@ bool ArgumentParser::ParseArgs(int argc, char** argv)
 {
      //special case of the default configuration ini.xml
      if (argc==1) {
-          Log->Write(
-                     "INFO: \tTrying to load the default configuration from the file <ini.xml>");
-     // first logs will go to stdout
-          Log->Write("----\nJuPedSim - JPScore\n");
-          Log->Write("Current date   : %s %s", __DATE__, __TIME__);
-          Log->Write("Version        : %s", JPSCORE_VERSION);
-          // Log->Write("Compiler       : %s (%s)", true_cxx.c_str(), true_cxx_ver.c_str());
-          Log->Write("Commit hash    : %s", GIT_COMMIT_HASH);
-          Log->Write("Commit date    : %s", GIT_COMMIT_DATE);
-          Log->Write("Branch         : %s\n----\n", GIT_BRANCH);
+          Logging::Info("Trying to load the default configuration from the file <ini.xml>");
 
           IniFileParser* p = new IniFileParser(_config);
           if (!p->Parse("ini.xml")) {
@@ -94,7 +70,7 @@ bool ArgumentParser::ParseArgs(int argc, char** argv)
           return true;
      }
 
-     string argument = argv[1];
+     std::string argument = argv[1];
 
      if (argument=="-h" || argument=="--help") {
           Usage(argv[0]);
@@ -104,8 +80,8 @@ bool ArgumentParser::ParseArgs(int argc, char** argv)
      // other special case where a single configuration file is submitted
      //check if inifile options are given
      if (argc==2) {
-          string prefix1 = "--ini=";
-          string prefix2 = "--inifile=";
+          std::string prefix1 = "--ini=";
+          std::string prefix2 = "--inifile=";
 
           if (!argument.compare(0, prefix2.size(), prefix2)) {
                argument.erase(0, prefix2.size());
@@ -122,17 +98,17 @@ bool ArgumentParser::ParseArgs(int argc, char** argv)
 #ifdef _JPS_AS_A_SERVICE //TODO try to avoid macros!
      if (argc==4 || argc==6) {
 
-          string argument1 = argv[1];
+          std::string argument1 = argv[1];
           if (argument1=="--as-a-service") { //runs jps as a service
-               string argument2 = argv[2];
+               std::string argument2 = argv[2];
                if (argument2=="-p") { //port
-                    string argument3 = argv[3];  //port number at which jps is listening
+                    std::string argument3 = argv[3];  //port number at which jps is listening
                     int port = std::atoi(argument3.c_str());
                     _config->SetRunAsService(true);
                     _config->SetServicePort(port);
                     if (argc==6) {
-                         string argument4 = argv[4];
-                         string argument5 = argv[5];
+                         std::string argument4 = argv[4];
+                         std::string argument5 = argv[5];
                          if (argument4=="--dump-scenario") {
                               struct stat sb;
                               if (stat(argument5.c_str(), &sb)==0 && S_ISDIR(sb.st_mode)) {
@@ -142,7 +118,7 @@ bool ArgumentParser::ParseArgs(int argc, char** argv)
                                    _config->SetProjectRootDir(argument5);
                                    _config->SetGeometryFile("geo.xml");
                                    _config->SetProjectFile("ini.xml");
-                                   _config->SetTrajectoriesFile(_config->GetProjectRootDir()+"tra.xml");
+                                   _config->SetTrajectoriesFile(_config->GetProjectRootDir() / "tra.xml");
                                    _config->SetFileFormat(FileFormat::FORMAT_XML_PLAIN);
                                    _config->SetFps(25);
                                    _config->SetDumpScenario(true);

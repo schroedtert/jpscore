@@ -25,33 +25,31 @@
  *
  *
  **/
-
 #include "SmokeSensor.h"
-#include "../../routing/smoke_router/NavigationGraph.h"
-#include "../../geometry/Building.h"
-#include "../../routing/smoke_router/cognitiveMap/cognitivemap.h"
-#include "../../pedestrian/Pedestrian.h"
-#include "../../geometry/SubRoom.h"
-#include "../generic/FDSMesh.h"
-#include "../generic/FDSMeshStorage.h"
-//#include <set>
-#include "../../tinyxml/tinyxml.h"
 
-#include <filesystem>
-namespace fs = std::filesystem;
+#include "general/Filesystem.h"
+#include "geometry/Building.h"
+#include "geometry/SubRoom.h"
+#include "JPSfire/generic/FDSMesh.h"
+#include "JPSfire/generic/FDSMeshStorage.h"
+#include "pedestrian/Pedestrian.h"
+#include "router/smoke_router/cognitiveMap/cognitivemap.h"
+#include "router/smoke_router/NavigationGraph.h"
+
+#include <tinyxml.h>
 
 SmokeSensor::SmokeSensor(const Building *b) : AbstractSensor(b)
 {
     _building = b;
-    LoadJPSfireInfo(_building->GetProjectFilename());
+    LoadJPSfireInfo();
 
 }
 
 SmokeSensor::~SmokeSensor() = default;
 
-bool SmokeSensor::LoadJPSfireInfo(const std::string projectFilename)
+bool SmokeSensor::LoadJPSfireInfo()
 {
-    TiXmlDocument doc(projectFilename);
+    TiXmlDocument doc(_building->GetProjectFilename().string());
     if (!doc.LoadFile()) {
          Log->Write("ERROR: \t%s", doc.ErrorDesc());
          Log->Write("ERROR: \t could not parse the project file");

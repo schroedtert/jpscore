@@ -24,25 +24,22 @@
  *
  *
  **/
-
-
-#include "Point.h"
-#include "Line.h"
-#include "Wall.h"
-#include "Obstacle.h"
 #include "SubRoom.h"
-#include "Transition.h"
-#include "Hline.h"
-#include "WaitingArea.h"
 
+#include "Hline.h"
+#include "Line.h"
+#include "Obstacle.h"
+#include "Point.h"
+#include "Transition.h"
+#include "WaitingArea.h"
+#include "Wall.h"
 
 #ifdef _SIMULATOR
-#include "../pedestrian/Pedestrian.h"
+#include "pedestrian/Pedestrian.h"
 #endif //_SIMULATOR
 
 #include <cmath>
 
-using namespace std;
 
 /************************************************************
  SubRoom
@@ -56,15 +53,15 @@ SubRoom::SubRoom()
 {
      _id = -1;
      _roomID=-1;
-     _walls = vector<Wall > ();
-     _poly = vector<Point > ();
-     _poly_help_constatnt = vector<double> ();
-     _poly_help_multiple = vector<double> ();
-     _obstacles=vector<Obstacle*> ();
+     _walls = std::vector<Wall > ();
+     _poly = std::vector<Point > ();
+     _poly_help_constatnt = std::vector<double> ();
+     _poly_help_multiple = std::vector<double> ();
+     _obstacles=std::vector<Obstacle*> ();
 
-     _crossings = vector<Crossing*>();
-     _transitions = vector<Transition*>();
-     _hlines = vector<Hline*>();
+     _crossings = std::vector<Crossing*>();
+     _transitions = std::vector<Transition*>();
+     _hlines = std::vector<Hline*>();
 
      _planeEquation[0]=0.0;
      _planeEquation[1]=0.0;
@@ -74,7 +71,7 @@ SubRoom::SubRoom()
      _minElevation=0;
      _maxElevation=0;
 
-     _goalIDs = vector<int> ();
+     _goalIDs = std::vector<int> ();
      _area = 0.0;
      _uid = _static_uid++;
      _boostPoly = polygon_type();
@@ -170,23 +167,23 @@ int SubRoom::GetRoomID() const
      return _roomID;
 }
 
-const vector<Wall>& SubRoom::GetAllWalls() const
+const std::vector<Wall>& SubRoom::GetAllWalls() const
 {
      return _walls;
 }
 
-const vector<Point>& SubRoom::GetPolygon() const
+const std::vector<Point>& SubRoom::GetPolygon() const
 {
      return _poly;
 }
 
-const vector<Obstacle*>& SubRoom::GetAllObstacles() const
+const std::vector<Obstacle*>& SubRoom::GetAllObstacles() const
 {
      return _obstacles;
 }
 
 
-const vector<int>& SubRoom::GetAllGoalIDs() const
+const std::vector<int>& SubRoom::GetAllGoalIDs() const
 {
      return _goalIDs;
 }
@@ -247,11 +244,31 @@ bool SubRoom::AddCrossing(Crossing* line)
      _goalIDs.push_back(line->GetUniqueID());
      return true;
 }
-
+// return true is walls was erased, otherwise false.
+bool SubRoom::RemoveTransition(Transition * t)
+{
+     auto it = std::find(_transitions.begin(), _transitions.end(), t);
+     if (it != _transitions.end()) {
+          // std::cout << "subroom remove transition "<< t->GetID() << ", " << t->GetUniqueID()<< "\n";
+          _transitions.erase(it);
+          RemoveGoalID(t->GetUniqueID());
+          // std::cout << "enter Remove Transitions with " << _transitions.size() << "\n";
+          return true;
+     }
+     // std::cout << "2 enter Remove Transitions with " << _transitions.size() << "\n";
+     return false;
+}
 bool SubRoom::AddTransition(Transition* line)
 {
+     // std::cout << "subroom addtransition "<< line->GetID() << ", " << line->GetUniqueID()<< "\n";
      _transitions.push_back(line);
      _goalIDs.push_back(line->GetUniqueID());
+     return true;
+}
+
+bool SubRoom::AddWaitingArea(WaitingArea* wa)
+{
+     _goalIDs.push_back(wa->GetCentreCrossing()->GetUniqueID());
      return true;
 }
 
@@ -290,17 +307,17 @@ const vector<Crossing*> SubRoom::GetAllDoors() const
      return ret;
 }
 
-const vector<Crossing*>& SubRoom::GetAllCrossings() const
+const std::vector<Crossing*>& SubRoom::GetAllCrossings() const
 {
      return _crossings;
 }
 
-const vector<Transition*>& SubRoom::GetAllTransitions() const
+const std::vector<Transition*>& SubRoom::GetAllTransitions() const
 {
      return _transitions;
 }
 
-const vector<Hline*>& SubRoom::GetAllHlines() const
+const std::vector<Hline*>& SubRoom::GetAllHlines() const
 {
      return _hlines;
 }
@@ -402,7 +419,7 @@ Point SubRoom::GetCentroid() const
      return Point(px,py);
 }
 
-vector<Wall> SubRoom::GetVisibleWalls(const Point & position)
+std::vector<Wall> SubRoom::GetVisibleWalls(const Point & position)
 {
 #define DEBUG 0
      std::vector<Wall> visible_walls;
@@ -875,6 +892,8 @@ bool SubRoom::CreateBoostPoly() {
           boost::geometry::assign_points(newObstacle, obsPoints);
           _boostPolyObstacles.emplace_back(newObstacle);
      }
+
+     ComputeBoundingBox();
      return true;
 }
 
@@ -891,12 +910,12 @@ NormalSubRoom::~NormalSubRoom()
 {
 }
 
-string NormalSubRoom::WriteSubRoom() const
+std::string NormalSubRoom::WriteSubRoom() const
 {
-     string s;
+     std::string s;
      for(auto&& w: _walls)
      {
-          string geometry;
+          std::string geometry;
           char wall[CLENGTH] = "";
           geometry.append("\t\t<wall>\n");
           sprintf(wall, "\t\t\t<point xPos=\"%.2f\" yPos=\"%.2f\" zPos=\"%.2f\"/>\n",
@@ -954,9 +973,9 @@ string NormalSubRoom::WriteSubRoom() const
      return s;
 }
 
-string NormalSubRoom::WritePolyLine() const
+std::string NormalSubRoom::WritePolyLine() const
 {
-     string s;
+     std::string s;
      char tmp[CLENGTH];
 
      s.append("\t<Obstacle closed=\"1\" boundingbox=\"0\" class=\"1\">\n");
@@ -984,10 +1003,10 @@ void NormalSubRoom::WriteToErrorLog() const
      }
 }
 
-bool NormalSubRoom::ConvertLineToPoly(const vector<Line*>& goals)
+bool NormalSubRoom::ConvertLineToPoly(const std::vector<Line*>& goals)
 {
-     vector<Line*> copy;
-     vector<Point> tmpPoly;
+     std::vector<Line*> copy;
+     std::vector<Point> tmpPoly;
      Point point;
      Line* line;
      // Alle Linienelemente in copy speichern
@@ -1227,12 +1246,12 @@ const Point & Stair::GetDown() const
      return pDown;
 }
 
-string Stair::WriteSubRoom() const
+std::string Stair::WriteSubRoom() const
 {
-     string s;
+     std::string s;
      for(auto&& w: _walls)
      {
-          string geometry;
+          std::string geometry;
           char wall[CLENGTH] = "";
           geometry.append("\t\t<wall>\n");
           sprintf(wall, "\t\t\t<point xPos=\"%.2f\" yPos=\"%.2f\" zPos=\"%.2f\"/>\n",
@@ -1266,10 +1285,10 @@ string Stair::WriteSubRoom() const
      return s;
 }
 
-string Stair::WritePolyLine() const
+std::string Stair::WritePolyLine() const
 {
 
-     string s;
+     std::string s;
      char tmp[CLENGTH];
 
      s.append("\t<Obstacle closed=\"1\" boundingbox=\"0\" class=\"1\">\n");
@@ -1314,11 +1333,11 @@ const Point* Stair::CheckCorner(const Point** otherPoint, const Point** aktPoint
      return rueck;
 }
 
-bool Stair::ConvertLineToPoly(const vector<Line*>& goals)
+bool Stair::ConvertLineToPoly(const std::vector<Line*>& goals)
 {
      //return NormalSubRoom::ConvertLineToPoly(goals);
-     vector<Line*> copy;
-     vector<Point> orgPoly = vector<Point > ();
+     std::vector<Line*> copy;
+     std::vector<Point> orgPoly = std::vector<Point > ();
      const Point* aktPoint;
      const Point* otherPoint;
      const Point* nextPoint;
@@ -1388,7 +1407,7 @@ bool Stair::ConvertLineToPoly(const vector<Line*>& goals)
           Log->Write(tmp);
           return false;
      }
-     vector<Point> neuPoly = (orgPoly);
+     std::vector<Point> neuPoly = (orgPoly);
      // ganz kleine Treppen (nur eine Stufe) nicht
      if ((neuPoly[0] - neuPoly[1]).Norm() > 0.9 && (neuPoly[1] - neuPoly[2]).Norm() > 0.9)
      {
@@ -1507,7 +1526,7 @@ std::vector<WaitingArea*> SubRoom::GetAllWaitingAreas()
 {
 
 
-     return vector<WaitingArea*>();
+     return std::vector<WaitingArea*>();
 }
 
 bool SubRoom::HasGoal(int id)
@@ -1515,6 +1534,30 @@ bool SubRoom::HasGoal(int id)
      return std::find(_goalIDs.begin(), _goalIDs.end(), id) != _goalIDs.end();
 }
 
+
+std::vector<double> SubRoom::GetBoundingBox() const
+{
+     return _boundingBox;
+}
+
+void SubRoom::ComputeBoundingBox()
+{
+     double xMin = std::numeric_limits<double>::max(),
+               xMax =std::numeric_limits<double>::min(),
+               yMin = std::numeric_limits<double>::max(),
+               yMax = std::numeric_limits<double>::min();
+
+     for (auto poly : GetPolygon()){
+          xMin = (xMin <= poly._x)?(xMin):(poly._x);
+          xMax = (xMax >= poly._x)?(xMax):(poly._x);
+
+          yMin = (yMin <= poly._y)?(yMin):(poly._y);
+          yMax = (yMax >= poly._y)?(yMax):(poly._y);
+     }
+
+     _boundingBox = { xMin, xMax, yMin, yMax};
+
+}
 
 /// Escalator
 

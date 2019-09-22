@@ -24,22 +24,24 @@
  *
  *
  **/
-
-
 #include "IODispatcher.h"
-#include "../pedestrian/Pedestrian.h"
-#include "../tinyxml/tinyxml.h"
-#include "../geometry/SubRoom.h"
-#include "../mpi/LCGrid.h"
+
+#include "OutputHandler.h"
+
+#include "general/Filesystem.h"
+#include "geometry/SubRoom.h"
+#include "mpi/LCGrid.h"
+#include "pedestrian/Pedestrian.h"
+#include "pedestrian/AgentsSource.h"
+
+#include <tinyxml.h>
 
 #define _USE_MATH_DEFINES
-
-using namespace std;
 
 
 IODispatcher::IODispatcher()
 {
-     _outputHandlers = vector<Trajectories*>();
+     _outputHandlers = std::vector<Trajectories*>();
 }
 
 IODispatcher::~IODispatcher()
@@ -56,7 +58,7 @@ void IODispatcher::AddIO(Trajectories* ioh)
 }
 
 
-const vector<Trajectories*>& IODispatcher::GetIOHandlers()
+const std::vector<Trajectories*>& IODispatcher::GetIOHandlers()
 {
      return _outputHandlers;
 }
@@ -98,7 +100,7 @@ void IODispatcher::WriteFooter()
  }
 
 
-string TrajectoriesJPSV04::WritePed(Pedestrian* ped)
+std::string TrajectoriesJPSV04::WritePed(Pedestrian* ped)
 {
      double RAD2DEG = 180.0 / M_PI;
      char tmp[CLENGTH] = "";
@@ -115,13 +117,13 @@ string TrajectoriesJPSV04::WritePed(Pedestrian* ped)
                (ped->GetPos()._y) * FAKTOR,(ped->GetElevation()) * FAKTOR ,a * FAKTOR, b * FAKTOR,
                phi * RAD2DEG, color);
 
-     return string(tmp);
+     return std::string(tmp);
 }
 
-void TrajectoriesJPSV04::WriteHeader(long nPeds, double fps, Building* building, int seed, int count)
+void TrajectoriesJPSV04::WriteHeader(long nPeds, double fps, Building* building, int seed, int /*count*/)
 {
      building->GetCaption();
-     string tmp;
+     std::string tmp;
      tmp =
                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n" "<trajectories>\n";
      char agents[CLENGTH] = "";
@@ -141,33 +143,33 @@ void TrajectoriesJPSV04::WriteHeader(long nPeds, double fps, Building* building,
 void TrajectoriesJPSV04::WriteGeometry(Building* building)
 {
      // just put a link to the geometry file
-     string embed_geometry;
+     std::string embed_geometry;
      embed_geometry.append("\t<geometry>\n");
      char file_location[CLENGTH] = "";
-     sprintf(file_location, "\t<file location= \"%s\"/>\n", building->GetGeometryFilename().c_str());
+     sprintf(file_location, "\t<file location= \"%s\"/>\n", building->GetGeometryFilename().string().c_str());
      embed_geometry.append(file_location);
      embed_geometry.append("\t</geometry>\n");
      //Write(embed_geometry);
      //return;
      //
-     string geometry;
+     std::string geometry;
      geometry.append("\t<geometry>\n");
 
      bool plotHlines = true;
      bool plotCrossings = true;
      bool plotTransitions = true;
      bool plotPlayingField=false;
-     vector<string> rooms_to_plot;
+     std::vector<std::string> rooms_to_plot;
      unsigned int i;
      // first the rooms
      //to avoid writing navigation line twice
-     vector<int> navLineWritten;
+     std::vector<int> navLineWritten;
      //rooms_to_plot.push_back("U9");
 
      for (const auto& it:building->GetAllRooms())
      {
           auto&& r = it.second;
-          string caption = r->GetCaption(); //if(r->GetID()!=1) continue;
+          std::string caption = r->GetCaption(); //if(r->GetID()!=1) continue;
           if (!rooms_to_plot.empty() && !IsElementInVector(rooms_to_plot, caption))
                continue;
 
@@ -178,7 +180,7 @@ void TrajectoriesJPSV04::WriteGeometry(Building* building)
 
                // the hlines
                if (plotHlines) {
-                    const vector<Hline*>& hlines = s->GetAllHlines();
+                    const std::vector<Hline*>& hlines = s->GetAllHlines();
                     for (i = 0; i < hlines.size(); i++) {
                          Hline* hline = hlines[i];
                          int uid1 = hline->GetUniqueID();
@@ -193,7 +195,7 @@ void TrajectoriesJPSV04::WriteGeometry(Building* building)
 
                     // the crossings
                     if (plotCrossings) {
-                         const vector<Crossing*>& crossings = s->GetAllCrossings();
+                         const std::vector<Crossing*>& crossings = s->GetAllCrossings();
                          for (i = 0; i < crossings.size(); i++) {
                               Crossing* crossing = crossings[i];
                               int uid1 = crossing->GetUniqueID();
@@ -210,7 +212,7 @@ void TrajectoriesJPSV04::WriteGeometry(Building* building)
 
                     // the transitions
                     if (plotTransitions) {
-                         const vector<Transition*>& transitions =
+                         const std::vector<Transition*>& transitions =
                                    s->GetAllTransitions();
                          for (i = 0; i < transitions.size(); i++) {
                               Transition* transition = transitions[i];
@@ -225,9 +227,9 @@ void TrajectoriesJPSV04::WriteGeometry(Building* building)
 
                                         Room* room1 = transition->GetRoom1();
                                         Room* room2 = transition->GetRoom2();
-                                        string caption1 = room1->GetCaption();
+                                        std::string caption1 = room1->GetCaption();
                                         if (room2) {
-                                             string caption2 = room2->GetCaption();
+                                             std::string caption2 = room2->GetCaption();
                                              if (IsElementInVector(rooms_to_plot,
                                                        caption1)
                                                        || IsElementInVector(rooms_to_plot,
@@ -251,7 +253,7 @@ void TrajectoriesJPSV04::WriteGeometry(Building* building)
      }
 
      //eventually write any goal
-     for (map<int, Goal*>::const_iterator itr = building->GetAllGoals().begin();
+     for (std::map<int, Goal*>::const_iterator itr = building->GetAllGoals().begin();
                itr != building->GetAllGoals().end(); ++itr) {
           geometry.append(itr->second->Write());
      }
@@ -288,9 +290,9 @@ void TrajectoriesJPSV04::WriteGeometry(Building* building)
 
 void TrajectoriesJPSV04::WriteFrame(int frameNr, Building* building)
 {
-     string data;
+     std::string data;
      char tmp[CLENGTH] = "";
-     vector<string> rooms_to_plot;
+     std::vector<std::string> rooms_to_plot;
 
      if( building->GetAllPedestrians().size() == 0)
           return;
@@ -298,12 +300,12 @@ void TrajectoriesJPSV04::WriteFrame(int frameNr, Building* building)
      sprintf(tmp, "<frame ID=\"%d\">\n", frameNr);
      data.append(tmp);
 
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
      for(unsigned int p=0;p<allPeds.size();p++)
      {
           Pedestrian* ped = allPeds[p];
           Room* r = building->GetRoom(ped->GetRoomID());
-          string caption = r->GetCaption();
+          std::string caption = r->GetCaption();
 
           if ((rooms_to_plot.empty() == false)
                     && (IsElementInVector(rooms_to_plot, caption) == false)) {
@@ -329,11 +331,11 @@ TrajectoriesFLAT::TrajectoriesFLAT() : Trajectories()
 {
 }
 
-std::string getSourceFileName(const std::string & GetProjectFile)
+static fs::path getSourceFileName(const fs::path& projectFile)
 {
-     std::string ret="";
+     fs::path ret{};
 
-     TiXmlDocument doc(GetProjectFile);
+     TiXmlDocument doc(projectFile.string());
      if (!doc.LoadFile()) {
           Log->Write("ERROR: \t%s", doc.ErrorDesc());
           Log->Write("ERROR: \tGetSourceFileName could not parse the project file");
@@ -355,36 +357,90 @@ std::string getSourceFileName(const std::string & GetProjectFile)
         }
         return ret;
     }
+    return ret;
 }
 
-std::string getEventFileName(const std::string & GetProjectFile)
+static fs::path getEventFileName(const fs::path& projectFile)
 {
-     std::string ret="";
+     fs::path ret{};
 
-     TiXmlDocument doc(GetProjectFile);
+     TiXmlDocument doc(projectFile.string());
      if (!doc.LoadFile()) {
           Log->Write("ERROR: \t%s", doc.ErrorDesc());
           Log->Write("ERROR: \tGetEventFileName could not parse the project file");
           return ret;
      }
      TiXmlNode* xMainNode = doc.RootElement();
-     string eventfile = "";
+     std::string eventfile = "";
      if (xMainNode->FirstChild("events_file")) {
-          ret = xMainNode->FirstChild("events_file")->FirstChild()->Value();
-          Log->Write("INFO: \tevents <" + eventfile + ">");
+          ret = xMainNode->FirstChild("events_file")->FirstChild()->ValueStr();
+          Log->Write("INFO: \tevents <" + ret.string() + ">");
      } else {
           Log->Write("INFO: \tNo events found");
           return ret;
      }
      return ret;
 }
+ // <train_constraints>
+ //   <train_time_table>ttt.xml</train_time_table>
+ //   <train_types>train_types.xml</train_types>
+ // </train_constraints>
 
 
-std::string getGoalFileName(const std::string & GetProjectFile)
+static fs::path getTrainTimeTableFileName(const fs::path& projectFile)
 {
-     std::string ret="";
+     fs::path ret{};
 
-     TiXmlDocument doc(GetProjectFile);
+     TiXmlDocument doc(projectFile.string());
+     if (!doc.LoadFile()) {
+          Log->Write("ERROR: \t%s", doc.ErrorDesc());
+          Log->Write("ERROR: \tGetTrainTimeTable could not parse the project file");
+          return ret;
+     }
+     TiXmlNode* xMainNode = doc.RootElement();
+     std::string tttfile = "";
+     if (xMainNode->FirstChild("train_constraints")) {
+          TiXmlNode * xFileNode = xMainNode->FirstChild("train_constraints")->FirstChild("train_time_table");
+
+          if(xFileNode)
+               ret = xFileNode->FirstChild()->ValueStr();
+          Log->Write("INFO: \ttrain_time_table <" + ret.string() + ">");
+     } else {
+          Log->Write("INFO: \tNo events no ttt file found");
+          return ret;
+     }
+     return ret;
+}
+
+static fs::path getTrainTypeFileName(const fs::path& projectFile)
+{
+     fs::path ret{};
+
+     TiXmlDocument doc(projectFile.string());
+     if (!doc.LoadFile()) {
+          Log->Write("ERROR: \t%s", doc.ErrorDesc());
+          Log->Write("ERROR: \tGetTrainType could not parse the project file");
+          return ret;
+     }
+     TiXmlNode* xMainNode = doc.RootElement();
+     std::string tttfile = "";
+     if (xMainNode->FirstChild("train_constraints")) {
+          auto xFileNode = xMainNode->FirstChild("train_constraints")->FirstChild("train_types");
+          if(xFileNode)
+               ret = xFileNode->FirstChild()->ValueStr();
+          Log->Write("INFO: \ttrain_types <" + ret.string() + ">");
+     } else {
+          Log->Write("INFO: \tNo events no train types file found");
+          return ret;
+     }
+     return ret;
+}
+
+static fs::path getGoalFileName(const fs::path& projectFile)
+{
+     fs::path ret{};
+
+     TiXmlDocument doc(projectFile.string());
      if (!doc.LoadFile()) {
           Log->Write("ERROR: \t%s", doc.ErrorDesc());
           Log->Write("ERROR: \tGetSourceFileName could not parse the project file");
@@ -400,40 +456,64 @@ std::string getGoalFileName(const std::string & GetProjectFile)
      if(xGoalsNodeFile)
      {
           ret = xGoalsNodeFile->FirstChild()->ValueStr();
-          Log->Write("INFO:\tGoal file <%s> will be parsed", ret.c_str());
+          Log->Write("INFO:\tGoal file <%s> will be parsed", ret.string().c_str());
      }
      return ret;
 }
 
-
 void TrajectoriesFLAT::WriteHeader(long nPeds, double fps, Building* building, int seed, int count)
 {
-     std::string sourceFileName = getSourceFileName(building->GetProjectFilename());
-     std::string goalFileName = getGoalFileName(building->GetProjectFilename());
-     std::string eventFileName = getEventFileName(building->GetProjectFilename());
+     const fs::path projRoot(building->GetProjectRootDir());
+
      (void) seed; (void) nPeds;
-     char tmp[100] = "";
+     char tmp[500] = "";
      sprintf(tmp, "#description: jpscore (%s)", JPSCORE_VERSION);
      Write(tmp);
      sprintf(tmp, "#count: %d", count);
      Write(tmp);
      sprintf(tmp, "#framerate: %0.2f",fps);
      Write(tmp);
-     sprintf(tmp,"#geometry: %s",building->GetGeometryFilename().c_str());
+     const fs::path tmpGeo = projRoot / building->GetGeometryFilename();
+     sprintf(tmp,"#geometry: %s",  tmpGeo.string().c_str());
      Write(tmp);
-     if(sourceFileName != "")
+
+     if(const fs::path sourceFileName = getSourceFileName(building->GetProjectFilename());
+          !sourceFileName.empty())
      {
-          sprintf(tmp,"#sources: %s", sourceFileName.c_str());
+          const fs::path tmpSource = projRoot / sourceFileName;
+          sprintf(tmp,"#sources: %s", tmpSource.string().c_str());
           Write(tmp);
      }
-     if(goalFileName != "")
+
+     if(const fs::path goalFileName = getGoalFileName(building->GetProjectFilename());
+          !goalFileName.empty())
      {
-          sprintf(tmp,"#goals: %s", goalFileName.c_str());
+          const fs::path tmpGoal = projRoot / goalFileName;
+          sprintf(tmp,"#goals: %s", tmpGoal.string().c_str());
           Write(tmp);
      }
-     if( eventFileName != "")
+
+     if(const fs::path eventFileName = getEventFileName(building->GetProjectFilename());
+          !eventFileName.empty())
      {
-          sprintf(tmp,"#events: %s", eventFileName.c_str());
+          const fs::path tmpEvent = projRoot / eventFileName;
+          sprintf(tmp,"#events: %s", tmpEvent.string().c_str());
+          Write(tmp);
+     }
+
+     if(const fs::path  trainTimeTableFileName = getTrainTimeTableFileName(building->GetProjectFilename());
+          !trainTimeTableFileName.empty())
+     {
+          const fs::path tmpTTT = projRoot / trainTimeTableFileName;
+          sprintf(tmp,"#trainTimeTable: %s", tmpTTT.string().c_str());
+          Write(tmp);
+     }
+
+     if(const fs::path  trainTypeFileName = getTrainTypeFileName(building->GetProjectFilename());
+          !trainTypeFileName.empty())
+     {
+          const fs::path tmpTT = projRoot / trainTypeFileName;
+          sprintf(tmp,"#trainType: %s", tmpTT.string().c_str());
           Write(tmp);
      }
      Write("#ID: the agent ID");
@@ -456,7 +536,7 @@ void TrajectoriesFLAT::WriteGeometry(Building* building)
 void TrajectoriesFLAT::WriteFrame(int frameNr, Building* building)
 {
      char tmp[CLENGTH] = "";
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
      for(unsigned int p=0;p<allPeds.size();p++){
           Pedestrian* ped = allPeds[p];
           double x = ped->GetPos()._x;
@@ -478,19 +558,19 @@ void TrajectoriesFLAT::WriteFooter()
 {
 
 }
-void TrajectoriesFLAT::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > sources)
+void TrajectoriesFLAT::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > /*sources*/)
 {
 
 }
-void TrajectoriesVTK::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > sources)
+void TrajectoriesVTK::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > /*sources*/)
 {
 
 }
-void TrajectoriesJPSV06::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > sources)
+void TrajectoriesJPSV06::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > /*sources*/)
 {
 
 }
-void TrajectoriesXML_MESH::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > sources)
+void TrajectoriesXML_MESH::WriteSources(const std::vector<std::shared_ptr<AgentsSource> > /*sources*/)
 {
 
 }
@@ -574,10 +654,10 @@ void TrajectoriesVTK::WriteFooter()
 }
 
 
-void TrajectoriesJPSV06::WriteHeader(long nPeds, double fps, Building* building, int seed, int count)
+void TrajectoriesJPSV06::WriteHeader(long nPeds, double fps, Building* building, int seed, int /*count*/)
 {
      building->GetCaption();
-     string tmp;
+     std::string tmp;
      tmp =
                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n" "<trajectories>\n";
      char agents[CLENGTH] = "";
@@ -621,20 +701,19 @@ void TrajectoriesJPSV06::WriteGeometry(Building* building)
      //     Write(embed_geometry);
 
      //set the content of the file
-     string fileName=building->GetProjectRootDir()+"/"+building->GetGeometryFilename().c_str();
-     string embed_geometry;
-     string tmp; //lines to drop
-     std::ifstream t(fileName.c_str());
-     std::getline(t,tmp); //drop the first line <?xml version="1.0" encoding="UTF-8"?>
+     const fs::path fileName =
+          building->GetProjectRootDir() / building->GetGeometryFilename();
+     std::ifstream t(fileName.string());
+     std::string dropedLine;
+     std::getline(t, dropedLine); //drop the first line <?xml version="1.0" encoding="UTF-8"?>
      std::stringstream buffer;
      buffer << t.rdbuf();
-     embed_geometry=buffer.str();
+     std::string embed_geometry = buffer.str();
 
      //write the hlines
-     string embed_hlines;
+     std::string embed_hlines;
      embed_hlines.append("\n\t<hlines>");
-     for (const auto& hline: building->GetAllHlines())
-     {
+     for (const auto& hline: building->GetAllHlines()) {
           embed_hlines.append(hline.second->GetDescription());
      }
      embed_hlines.append("\n\t</hlines>");
@@ -649,35 +728,25 @@ void TrajectoriesJPSV06::WriteGeometry(Building* building)
      ReplaceStringInPlace(embed_geometry,"</geometry>",embed_hlines);
 
      Write(embed_geometry);
-
-     //     Write("\t<AttributeDescription>");
-     //     Write("\t\t<property tag=\"x\" description=\"xPosition\"/>");
-     //     Write("\t\t<property tag=\"y\" description=\"yPosition\"/>");
-     //     Write("\t\t<property tag=\"z\" description=\"zPosition\"/>");
-     //     Write("\t\t<property tag=\"rA\" description=\"radiusA\"/>");
-     //     Write("\t\t<property tag=\"rB\" description=\"radiusB\"/>");
-     //     Write("\t\t<property tag=\"eC\" description=\"ellipseColor\"/>");
-     //     Write("\t\t<property tag=\"eO\" description=\"ellipseOrientation\"/>");
-     //     Write("\t</AttributeDescription>\n");
 }
 
 void TrajectoriesJPSV06::WriteFrame(int frameNr, Building* building)
 {
-     string data;
+     std::string data;
      char tmp[CLENGTH] = "";
      double RAD2DEG = 180.0 / M_PI;
-     vector<string> rooms_to_plot;
+     std::vector<std::string> rooms_to_plot;
 
      sprintf(tmp, "<frame ID=\"%d\">\n", frameNr);
      data.append(tmp);
 
 
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
      for(unsigned int p=0;p<allPeds.size();++p)
      {
           Pedestrian* ped = allPeds[p];
           Room* r = building->GetRoom(ped->GetRoomID());
-          string caption = r->GetCaption();
+          std::string caption = r->GetCaption();
 
           if (!IsElementInVector(rooms_to_plot, caption)) {
                if (!rooms_to_plot.empty()) {
@@ -730,10 +799,10 @@ void TrajectoriesXML_MESH::WriteGeometry(Building* building)
 }
 
 
-void TrajectoriesJPSV05::WriteHeader(long nPeds, double fps, Building* building, int seed, int count)
+void TrajectoriesJPSV05::WriteHeader(long nPeds, double fps, Building* building, int seed, int /*count*/)
 {
      building->GetCaption();
-     string tmp;
+     std::string tmp;
      tmp = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n" "<trajectories>\n";
      char agents[CLENGTH] = "";
      sprintf(agents, "\t<header version = \"0.5.1\">\n");
@@ -759,20 +828,20 @@ void TrajectoriesJPSV05::WriteSources(const std::vector<std::shared_ptr<AgentsSo
           auto BB =  src->GetBoundaries();
           tmp += "<source  id=\"" + std::to_string(src->GetId()) +
                "\"  caption=\"" + src->GetCaption() + "\"" +
-               "  x_min=\"" + to_string(BB[0]) + "\"" +
-               "  x_max=\"" + to_string(BB[1]) + "\"" +
-               "  y_min=\"" + to_string(BB[2]) + "\"" +
-               "  y_max=\"" + to_string(BB[3]) + "\" />\n";
+               "  x_min=\"" + std::to_string(BB[0]) + "\"" +
+               "  x_max=\"" + std::to_string(BB[1]) + "\"" +
+               "  y_min=\"" + std::to_string(BB[2]) + "\"" +
+               "  y_max=\"" + std::to_string(BB[3]) + "\" />\n";
     }
      _outputHandler->Write(tmp);
 }
 void TrajectoriesJPSV05::WriteGeometry(Building* building)
 {
      // just put a link to the geometry file
-     string embed_geometry;
+     std::string embed_geometry;
      embed_geometry.append("\t<geometry>\n");
      char file_location[CLENGTH] = "";
-     sprintf(file_location, "\t<file location= \"%s\"/>\n", building->GetGeometryFilename().c_str());
+     sprintf(file_location, "\t<file location= \"%s\"/>\n", building->GetGeometryFilename().string().c_str());
      embed_geometry.append(file_location);
      //embed_geometry.append("\t</geometry>\n");
 
@@ -806,19 +875,19 @@ void TrajectoriesJPSV05::WriteGeometry(Building* building)
 
 void TrajectoriesJPSV05::WriteFrame(int frameNr, Building* building)
 {
-     string data;
+     std::string data;
      char tmp[CLENGTH] = "";
      double RAD2DEG = 180.0 / M_PI;
 
      sprintf(tmp, "<frame ID=\"%d\">\n", frameNr);
      data.append(tmp);
 
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
      for(unsigned int p=0;p<allPeds.size();p++)
      {
           Pedestrian* ped = allPeds[p];
           Room* r = building->GetRoom(ped->GetRoomID());
-          string caption = r->GetCaption();
+          std::string caption = r->GetCaption();
           char s[CLENGTH] = "";
           int color=ped->GetColor();
           double a = ped->GetLargerAxis();

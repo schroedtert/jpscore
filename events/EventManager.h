@@ -24,16 +24,22 @@
  *
  *
  **/
+#pragma once
+
+#include "general/Configuration.h"
+#include "general/Macros.h"
+#include "general/Filesystem.h"
+#include "Event.h"
 
 #include <vector>
 #include <string>
 #include <random>
 
 class Building;
+class Pedestrian;
 class Router;
-class QuickestPathRouter;
 class RoutingEngine;
-class Event;
+class OutputHandler;
 
 extern OutputHandler* Log;
 
@@ -43,7 +49,7 @@ public:
      /**
       * Constructor
       */
-     EventManager(Building *_b, unsigned int seed);
+     EventManager(Configuration* config, Building *_b, unsigned int seed);
 
      /**
       * destructor
@@ -79,6 +85,7 @@ public:
      void CloseDoor(int id);
      void TempCloseDoor(int id);
      void OpenDoor(int id);
+     void ResetDoor(int id);
      //void ChangeRouting(int id, const std::string& state);
      void GetEvent(char* c);
 
@@ -145,10 +152,8 @@ private:
      void CreateSomeEngines();
 
 private:
-
+     Configuration* _config;
      std::vector<Event> _events;
-     std::string _projectFilename;
-     std::string _projectRootDir;
      Building *_building;
      FILE *_file;
      bool _dynamic;
@@ -166,6 +171,5 @@ private:
      // random number generator
      std::mt19937 _rdGenerator;
      std::uniform_real_distribution<double> _rdDistribution;
-//     std::uniform_real_distribution<double> d(0, 1);
      std::map<int, std::vector<int>> groupDoor;
 };

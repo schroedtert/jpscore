@@ -24,12 +24,10 @@
  *
  *
  **/
-
-
-#ifndef _TRANSITION_H
-#define _TRANSITION_H
+#pragma once
 
 #include "Crossing.h"
+
 #include <string>
 
 class Room;
@@ -92,6 +90,3 @@ public:
     virtual DoorState checkOneDir(int roomID, int subroomID) const;
 
 };
-
-#endif  /* _TRANSITION_H */
-

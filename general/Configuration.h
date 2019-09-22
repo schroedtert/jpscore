@@ -18,40 +18,29 @@
 //
 // Created by laemmel on 23.03.16.
 //
+#pragma once
 
-#ifndef JPSCORE_CONFIGURATION_H
-#define JPSCORE_CONFIGURATION_H
+#include "randomnumbergenerator.h"
+#include "Macros.h"
+
+#include "JPSfire/B_walking_speed/WalkingSpeed.h"
+#include "JPSfire/C_toxicity_analysis/ToxicityAnalysis.h"
+#include "general/Filesystem.h"
+#include "math/OperationalModel.h"
+#include "pedestrian/AgentsParameters.h"
+#include "router/RoutingEngine.h"
+
+#ifdef _JPS_AS_A_SERVICE
+#include "hybrid/HybridSimulationManager.h"
+#endif
 
 #include <string>
 #include <cstdlib>
 #include <memory>
-#include "Macros.h"
 
-#ifdef _JPS_AS_A_SERVICE
-
-#include "../hybrid/HybridSimulationManager.h"
-
-#endif
-
-#include "../routing/RoutingEngine.h"
-#include "../math/OperationalModel.h"
-#include "../JPSfire/B_walking_speed/WalkingSpeed.h"
-#include "../JPSfire/C_toxicity_analysis/ToxicityAnalysis.h"
-
-//for random numbers
-#include "randomnumbergenerator.h"
-
-//This class provides a data container for all configuration parameters.
-
-class AgentsParameters;
 class DirectionStrategy;
 
-#ifdef _JPS_AS_A_SERVICE
-
-class HybridSimulationManager;
-
-#endif
-
+//This class provides a data container for all configuration parameters.
 class Configuration {
 
 public:
@@ -99,6 +88,7 @@ public:
 
           _hostname = "localhost";
           _trajectoriesFile = "trajectories.xml";
+          _originalTrajectoriesFile = "trajectories.xml";
           _errorLogFile = "log.txt";
           _projectFile = "";
           _geometryFile = "";
@@ -124,7 +114,7 @@ public:
           _write_VTK_files_direction = false;
 //          _dirSubLocal = nullptr;
 //          _dirLocal = nullptr;
-          _dirStrategy = nullptr;
+          _dirManager = nullptr;
 	  //for random numbers
           _rdGenerator=RandomNumberGenerator();
 
@@ -287,8 +277,12 @@ public:
 
      int get_exit_strat() const {return _exit_strat;}
 
-     void set_dirStrategy(DirectionStrategy* dir){_dirStrategy = dir;}
-     DirectionStrategy* get_dirStrategy(){return _dirStrategy;}
+//     void set_dirStrategy(DirectionStrategy* dir){_dirStrategy = dir;}
+//     DirectionStrategy* get_dirStrategy(){return _dirStrategy;}
+
+     void SetDirectionManager(std::shared_ptr<DirectionManager> dir){_dirManager = dir;}
+     std::shared_ptr<DirectionManager> GetDirectionManager(){return _dirManager;}
+
 //     void set_dirSubLocal(DirectionSubLocalFloorfield* dir) {_dirSubLocal = dir;}
 //
 //    void set_dirLocal(DirectionLocalFloorfield* dir) {_dirLocal = dir;}
@@ -311,25 +305,29 @@ public:
 
      void SetHostname(std::string hostname) { _hostname = hostname; };
 
-     const std::string& GetTrajectoriesFile() const { return _trajectoriesFile; };
+     const fs::path& GetTrajectoriesFile() const { return _trajectoriesFile; };
 
-     void SetTrajectoriesFile(std::string trajectoriesFile) { _trajectoriesFile = trajectoriesFile; };
+     void SetTrajectoriesFile(const fs::path& trajectoriesFile) { _trajectoriesFile = trajectoriesFile; };
 
-     const std::string& GetErrorLogFile() const { return _errorLogFile; };
+     const fs::path& GetOriginalTrajectoriesFile() const { return _originalTrajectoriesFile; };
 
-     void SetErrorLogFile(std::string errorLogFile) { _errorLogFile = errorLogFile; };
+     void SetOriginalTrajectoriesFile(const fs::path& trajectoriesFile) { _originalTrajectoriesFile = trajectoriesFile; };
 
-     const std::string& GetProjectFile() const { return _projectFile; };
+     const fs::path& GetErrorLogFile() const { return _errorLogFile; };
 
-     void SetProjectFile(std::string projectFile) { _projectFile = projectFile; };
+     void SetErrorLogFile(const fs::path& errorLogFile) { _errorLogFile = errorLogFile; };
 
-     const std::string& GetGeometryFile() const { return _geometryFile; };
+     const fs::path& GetProjectFile() const { return _projectFile; };
 
-     void SetGeometryFile(std::string geometryFile) { _geometryFile = geometryFile; };
+     void SetProjectFile(const fs::path& projectFile) { _projectFile = projectFile; };
 
-     const std::string& GetProjectRootDir() const { return _projectRootDir; };
+     const fs::path& GetGeometryFile() const { return _geometryFile; };
 
-     void SetProjectRootDir(std::string projectRootDir) { _projectRootDir = projectRootDir; };
+     void SetGeometryFile(const fs::path& geometryFile) { _geometryFile = geometryFile; };
+
+     const fs::path& GetProjectRootDir() const { return _projectRootDir; };
+
+     void SetProjectRootDir(const fs::path& projectRootDir) { _projectRootDir = projectRootDir; };
 
      bool ShowStatistics() const { return _showStatistics; };
 
@@ -422,19 +420,15 @@ private:
 
      int _exit_strat;
 
-//     DirectionSubLocalFloorfield* _dirSubLocal;
-//     DirectionLocalFloorfield* _dirLocal;
-//     DirectionSubLocalFloorfieldTrips* _dirSubLocalTrips;
-//     DirectionSubLocalFloorfieldTripsVoronoi* _dirSubLocalTripsVoronoi;
-
-     DirectionStrategy* _dirStrategy;
+    std::shared_ptr<DirectionManager> _dirManager;
 
      std::string _hostname;
-     std::string _trajectoriesFile;
-     std::string _errorLogFile;
-     std::string _projectFile;
-     std::string _geometryFile;
-     std::string _projectRootDir;
+     fs::path _trajectoriesFile;
+     fs::path _originalTrajectoriesFile;
+     fs::path _errorLogFile;
+     fs::path _projectFile;
+     fs::path _geometryFile;
+     fs::path _projectRootDir;
      bool _showStatistics;
 
      mutable RandomNumberGenerator _rdGenerator;
@@ -451,7 +445,3 @@ private:
 
 
 };
-
-
-
-#endif //JPSCORE_CONFIGURATION_H

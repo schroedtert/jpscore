@@ -24,29 +24,16 @@
  *
  *
  **/
+#pragma once
 
+#include "router/global_shortest/DTriangulation.h"
+#include "general/Macros.h"
 
-#ifndef _SUBROOM_H
-#define _SUBROOM_H
-
-
-#include "Wall.h"
-#include "../routing/global_shortest/DTriangulation.h"
-
-#include <vector>
-#include <string>
 #include <boost/polygon/polygon.hpp>
 #include <boost/geometry.hpp>
 
-//typedef boost::geometry::model::d2::point_xy<double> point_type;
-//typedef boost::geometry::model::polygon<point_type> polygon_type;
-//typedef boost::geometry::model::polygon<Point> polygon_type;
-
-namespace bg = boost::geometry;
-//typedef bg::model::point<double, 2, bg::cs::cartesian> point;
-//typedef bg::model::box<point> box;
-//typedef bg::model::polygon<Point, false, true> closed_polygon;
-typedef bg::model::polygon<Point, false, false> polygon_type;
+#include <vector>
+#include <string>
 
 //forward declarations
 class Transition;
@@ -62,6 +49,8 @@ class WaitingArea;
 class Pedestrian;
 #endif
 
+namespace bg = boost::geometry;
+typedef bg::model::polygon<Point, false, false> polygon_type;
 
 /************************************************************
  SubRoom
@@ -107,6 +96,7 @@ protected:
      std::vector<double> _poly_help_constatnt; //for the function IsInsidePolygon, a.brkic
      std::vector<double> _poly_help_multiple; //for the function IsInsidePolygon, a.brkic
      std::vector<Obstacle*> _obstacles;
+     std::vector<double> _boundingBox;
 
 public:
 
@@ -304,8 +294,10 @@ public:
      //navigation
      bool AddCrossing(Crossing* line);
      bool AddTransition(Transition* line);
+     bool RemoveTransition(Transition * t);
      bool AddHline(Hline* line);
      void AddNeighbor(SubRoom* sub);
+     bool AddWaitingArea(WaitingArea* line);
 
      const std::vector<Crossing*> GetAllDoors() const;
      const std::vector<Crossing*>& GetAllCrossings() const;
@@ -405,6 +397,10 @@ public:
 
 #endif
 
+     std::vector<double> GetBoundingBox() const;
+
+private:
+     void ComputeBoundingBox();
 };
 
 /************************************************************
@@ -488,5 +484,3 @@ public:
     bool IsEscalatorDown() const;
 
 };
-
-#endif  /* _SUBROOM_H */

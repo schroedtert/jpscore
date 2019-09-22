@@ -1,6 +1,10 @@
 #include "FDSMesh.h"
+
+#include "IO/OutputHandler.h"
+
+#include <cnpy.h>
 #include <cmath>
-#include "../../cnpy/cnpy.h"
+
 std::vector<std::string> &split2(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;

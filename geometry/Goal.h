@@ -24,23 +24,21 @@
  *
  *
  **/
- 
+#pragma once
 
-#ifndef GOAL_H_
-#define GOAL_H_
+#include "Point.h"
+
+#include <boost/polygon/polygon.hpp>
+#include <boost/geometry.hpp>
 
 #include <string>
 #include <vector>
 
-#include "Point.h"
-#include "Crossing.h"
-#include <boost/polygon/polygon.hpp>
-#include <boost/geometry.hpp>
-
 //forward declarations
 class Wall;
 class Point;
-//class Pedestrian;
+class Crossing;
+class Pedestrian;
 
 namespace bg = boost::geometry;
 typedef bg::model::polygon<Point, false, false> polygon_type;
@@ -144,9 +142,8 @@ public:
 
      Crossing* GetCentreCrossing();
 
-//     bool IsInsideGoal(Pedestrian* ped) const;
+     bool IsInsideGoal(Pedestrian* ped) const;
 
-     bool IsInsideGoal(const Point& point) const;
 
     int GetRoomID() const;
 
@@ -155,6 +152,8 @@ public:
     int GetSubRoomID() const;
 
     void SetSubRoomID(int _subRoomID);
+
+    bool IsInsideGoal(const Point& point) const;
 
 private:
     bool IsClockwise();
@@ -167,5 +166,3 @@ private:
                        double hitY) const;
 
 };
-
-#endif /* GOAL_H_ */

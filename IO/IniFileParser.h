@@ -18,20 +18,22 @@
 //
 // Created by laemmel on 24.03.16.
 //
+#pragma once
 
-#ifndef JPSCORE_INIFILEPARSER_H
-#define JPSCORE_INIFILEPARSER_H
+#include "general/Configuration.h"
+#include "general/Filesystem.h"
 
 #include <string>
-
-#include "../general/Configuration.h"
-#include "../routing/DirectionStrategy.h"
 
 class OutputHandler;
 
 class TiXmlElement;
 
 class TiXmlNode;
+
+class DirectionManager;
+
+class WaitingStrategy;
 
 extern OutputHandler* Log;
 
@@ -41,9 +43,11 @@ public:
      IniFileParser(Configuration* config);
      ~IniFileParser(){};
 
-     bool Parse(std::string iniFile);
+     bool Parse(const fs::path& iniFile);
 
 private:
+     bool ParseHeader(TiXmlNode* xHeader);
+
      bool ParseGCFMModel(TiXmlElement* xGCFM, TiXmlElement* xMain);
 
      bool ParseKrauszModel(TiXmlElement* xKrausz, TiXmlElement* xMain);
@@ -78,9 +82,9 @@ private:
 
      Configuration* _config;
      int _model;
-     std::shared_ptr<DirectionStrategy> _exit_strategy;
-     int _exit_strat_number;
+     std::shared_ptr<DirectionStrategy> _directionStrategy;
+     std::shared_ptr<WaitingStrategy> _waitingStrategy;
+     std::shared_ptr<DirectionManager> _directionManager;
+    int _exit_strat_number;
 
 };
-
-#endif //JPSCORE_INIFILEPARSER_H

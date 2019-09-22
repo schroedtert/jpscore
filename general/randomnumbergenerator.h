@@ -1,5 +1,4 @@
-#ifndef RANDOMNUMBERGENERATOR_H
-#define RANDOMNUMBERGENERATOR_H
+#pragma once
 
 #include <random>
 
@@ -22,9 +21,4 @@ public:
 private:
     std::mt19937 _randomEngine;
     std::uniform_real_distribution<double> _rdDistribution;
-
-
 };
-
-#endif // RANDOMNUMBERGENERATOR_H
-

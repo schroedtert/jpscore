@@ -24,11 +24,7 @@
  *
  *
  **/
-
-
 #include "Wall.h"
-
-using namespace std;
 
 /************************************************************
  Wall
@@ -42,11 +38,6 @@ Wall::Wall(const Point& p1, const Point& p2, const std::string& type) : Line(p1,
 {
 }
 
-Wall::Wall(const Wall& orig) : Line(orig)
-{
-     _type=orig.GetType();
-}
-
 void Wall::WriteToErrorLog() const
 {
      char tmp[CLENGTH];
@@ -55,9 +46,9 @@ void Wall::WriteToErrorLog() const
      Log->Write(tmp);
 }
 
-string Wall::Write() const
+std::string Wall::Write() const
 {
-     string geometry;
+     std::string geometry;
      char wall[500] = "";
      geometry.append("\t\t<wall>\n");
      sprintf(wall, "\t\t\t<point xPos=\"%.2f\" yPos=\"%.2f\"/>\n",

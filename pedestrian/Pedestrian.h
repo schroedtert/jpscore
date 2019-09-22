@@ -24,24 +24,22 @@
  *
  *
  **/
+#pragma once
 
+#include "Ellipse.h"
+#include "AgentsParameters.h"
+#include "PedDistributor.h"
 
-#ifndef _PEDESTRIAN_H
-#define _PEDESTRIAN_H
+#include "general/Macros.h"
+#include "geometry/NavLine.h"
+#include "JPSfire/B_walking_speed/WalkingSpeed.h"
+#include "JPSfire/C_toxicity_analysis/ToxicityAnalysis.h"
 
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
 #include <time.h>
-
-#include "Ellipse.h"
-#include "../general/Macros.h"
-#include "../geometry/NavLine.h"
-#include "AgentsParameters.h"
-#include "PedDistributor.h"
-#include "../JPSfire/B_walking_speed/WalkingSpeed.h"
-#include "../JPSfire/C_toxicity_analysis/ToxicityAnalysis.h"
 
 class Building;
 class NavLine;
@@ -154,7 +152,8 @@ private:
 
      int _lastGoalID = -1;
      bool _insideGoal =false;
-
+     bool _waiting = false;
+     Point _waitingPos;
 
 public:
      // public member
@@ -508,6 +507,17 @@ public:
 
      bool IsInsideGoal() const;
 
-};
+     bool IsInsideWaitingAreaWaiting() const;
 
-#endif  /* _PEDESTRIAN_H */
+    const Point& GetWaitingPos() const;
+
+     void SetWaitingPos(const Point& waitingPos);
+
+     bool IsWaiting() const;
+
+     void StartWaiting();
+     void EndWaiting();
+
+     bool IsOutside();
+
+};

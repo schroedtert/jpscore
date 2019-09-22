@@ -24,10 +24,7 @@
  *
  *
  **/
- 
-
-#ifndef _WALL_H
-#define _WALL_H
+#pragma once
 
 #include "Line.h"
 
@@ -45,9 +42,9 @@ public:
      Wall(const Point& p1, const Point& p2, const std::string& type="internal");
 
      /**
-      * Constructor
+      * Destructor
       */
-     Wall(const Wall& orig);
+     ~Wall() override = default;
 
      /**
       * set/get the wall type. Values are external and internal
@@ -67,12 +64,8 @@ public:
      /**
       * @return a nicely formated string of the object
       */
-     virtual std::string Write() const;
+     std::string Write() const override;
 
 private:
      std::string _type;
 };
-
-
-#endif  /* _WALL_H */
-

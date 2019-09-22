@@ -26,31 +26,29 @@
  *
  *
  **/
-
-# define NOMINMAX
-#include "../pedestrian/Pedestrian.h"
-//#include "../routing/DirectionStrategy.h"
-#include "../mpi/LCGrid.h"
-#include "../geometry/Wall.h"
-#include "../geometry/SubRoom.h"
-
-
 #include "VelocityModel.h"
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_thread_num() 0
-#define omp_get_max_threads()  1
-#endif
+
+#include "general/OpenMP.h"
+#include "geometry/SubRoom.h"
+#include "geometry/Wall.h"
+#include "mpi/LCGrid.h"
+#include "pedestrian/Pedestrian.h"
+
+#include "direction/DirectionManager.h"
+#include "direction/walking/DirectionStrategy.h"
+#include "direction/walking/DirectionFloorfield.h"
+#include "direction/walking/DirectionGeneral.h"
+#include "direction/walking/DirectionInRangeBottleneck.h"
+#include "direction/walking/DirectionLocalFloorfield.h"
+#include "direction/walking/DirectionMiddlePoint.h"
+#include "direction/walking/DirectionMinSeperationShorterLine.h"
+#include "direction/walking/DirectionSubLocalFloorfield.h"
 
 double xRight = 26.0;
 double xLeft = 0.0;
 double cutoff = 2.0;
 
-using std::vector;
-using std::string;
-
-VelocityModel::VelocityModel(std::shared_ptr<DirectionStrategy> dir, double aped, double Dped,
+VelocityModel::VelocityModel(std::shared_ptr<DirectionManager> dir, double aped, double Dped,
                              double awall, double Dwall)
 {
      _direction = dir;
@@ -70,41 +68,9 @@ VelocityModel::~VelocityModel()
 
 bool VelocityModel::Init (Building* building)
 {
-     double _deltaH = building->GetConfig()->get_deltaH();
-     double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
-     bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
+     _direction->Init(building);
 
-     if(auto dirff = dynamic_cast<DirectionFloorfield*>(_direction.get())){
-        dirff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-        Log->Write("INFO:\t Init DirectionFloorfield done");
-    }
-
-     if(auto dirlocff = dynamic_cast<DirectionLocalFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionLOCALFloorfield starting ...");
-          dirlocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionLOCALFloorfield done");
-     }
-
-     if(auto dirsublocff = dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfield starting ...");
-          dirsublocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfield done");
-     }
-
-     if(auto dirsublocffTrips = dynamic_cast<DirectionSubLocalFloorfieldTrips*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfieldTrips starting ...");
-          dirsublocffTrips->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfieldTrips done");
-     }
-
-     if(auto dirsublocffTripsVoronoi = dynamic_cast<DirectionSubLocalFloorfieldTripsVoronoi*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfieldTripsVoronoi starting ...");
-          dirsublocffTripsVoronoi->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfieldTripsVoronoi done");
-     }
-
-
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
      size_t peds_size = allPeds.size();
      std::cout << "Building has " << peds_size << " peds\n";
     for(unsigned int p=0;p < peds_size;p++)
@@ -165,8 +131,8 @@ bool VelocityModel::Init (Building* building)
 void VelocityModel::ComputeNextTimeStep(double current, double deltaT, Building* building, int periodic)
 {
       // collect all pedestrians in the simulation.
-      const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
-      vector<Pedestrian*> pedsToRemove;
+      const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+      std::vector<Pedestrian*> pedsToRemove;
       pedsToRemove.reserve(500);
       unsigned long nSize;
       nSize = allPeds.size();
@@ -183,9 +149,9 @@ void VelocityModel::ComputeNextTimeStep(double current, double deltaT, Building*
      //TODO richtig parallelisieren!
       #pragma omp parallel default(shared) num_threads(nThreads)
       {
-           vector< Point > result_acc = vector<Point > ();
+           std::vector< Point > result_acc = std::vector<Point > ();
            result_acc.reserve(nSize);
-           vector< my_pair > spacings = vector<my_pair > ();
+           std::vector< my_pair > spacings = std::vector<my_pair > ();
            spacings.reserve(nSize); // larger than needed
            spacings.push_back(my_pair(100, 1)); // in case there are no neighbors
            const int threadID = omp_get_thread_num();
@@ -199,10 +165,9 @@ void VelocityModel::ComputeNextTimeStep(double current, double deltaT, Building*
                 Room* room = building->GetRoom(ped->GetRoomID());
                 SubRoom* subroom = room->GetSubRoom(ped->GetSubRoomID());
                 Point repPed = Point(0,0);
-                vector<Pedestrian*> neighbours;
+                std::vector<Pedestrian*> neighbours;
                 building->GetGrid()->GetNeighbourhood(ped,neighbours);
 
-                double time = Pedestrian::GetGlobalTime();
                 int size = (int) neighbours.size();
 ////                if (ped->GetID() == 71) {
 ////                     std::cout << "------------------------------------" << std::endl;
@@ -212,7 +177,7 @@ void VelocityModel::ComputeNextTimeStep(double current, double deltaT, Building*
 
 
                 for (int i = 0; i < size; i++) {
-               
+
                      Pedestrian* ped1 = neighbours[i];
 //                     if (ped->GetID() == 71) {
 //                         std::cout << "Velocity Model debug ped1: " << ped1->GetID() << "\t" <<  ped1->GetPos().toString() <<std::endl;
@@ -229,7 +194,7 @@ void VelocityModel::ComputeNextTimeStep(double current, double deltaT, Building*
 
                      Point p2 = ped1->GetPos();
                      //subrooms to consider when looking for neighbour for the 3d visibility
-                     vector<SubRoom*> emptyVector;
+                     std::vector<SubRoom*> emptyVector;
                      emptyVector.push_back(subroom);
                      emptyVector.push_back(building->GetRoom(ped1->GetRoomID())->GetSubRoom(ped1->GetSubRoomID()));
                      bool isVisible = building->IsVisible(p1, p2, emptyVector, false);
@@ -293,11 +258,12 @@ void VelocityModel::ComputeNextTimeStep(double current, double deltaT, Building*
                 spacings.clear(); //clear for ped p
 
                 // stuck peds get removed. Warning is thrown. low speed due to jam is omitted.
-                if(ped->GetTimeInJam() > ped->GetPatienceTime() && ped->GetGlobalTime() > 30 + ped->GetPremovementTime() &&
+                if(ped->GetTimeInJam() > ped->GetPatienceTime() && ped->GetGlobalTime() > 10000 + ped->GetPremovementTime() &&
                           std::max(ped->GetMeanVelOverRecTime(), ped->GetV().Norm()) < 0.01 &&
-                          size == 0 ) // size length of peds neighbour vector
+                          size == 0 && // size length of peds neighbour vector
+                          !ped->IsWaiting()) // Waiting peds are not deleted
                 {
-                      Log->Write("WARNING:\tped %d with vmean  %f has been deleted in room [%i]/[%i] after time %f s (current=%f\n", ped->GetID(), ped->GetMeanVelOverRecTime(), ped->GetRoomID(), ped->GetSubRoomID(), ped->GetGlobalTime(), current);
+                     Log->Write("WARNING:\tped %d with vmean  %f has been deleted in room [%i]/[%i] after time %f s (current=%f\n", ped->GetID(), ped->GetMeanVelOverRecTime(), ped->GetRoomID(), ped->GetSubRoomID(), ped->GetGlobalTime(), current);
                       Log->incrementDeletedAgents();
                       #pragma omp critical(VelocityModel_ComputeNextTimeStep_pedsToRemove)
                       pedsToRemove.push_back(ped);
@@ -352,9 +318,19 @@ Point VelocityModel::e0(Pedestrian* ped, Room* room) const
       Point target;
       if(_direction && ped->GetExitLine())
            target = _direction->GetTarget(room, ped); // target is where the ped wants to be after the next timestep
-      else {
+      else { //@todo: we need a model for waiting pedestrians
            std::cout << ped->GetID() << " VelocityModel::e0 Ped has no navline.\n";
-           exit(EXIT_FAILURE);
+           //exit(EXIT_FAILURE);
+           // set random destination
+           std::mt19937 mt(ped->GetBuilding()->GetConfig()->GetSeed());
+           std::uniform_real_distribution<double> dist(0, 1.0);
+           double random_x = dist(mt);
+           double random_y = dist(mt);
+           Point P1 = Point(ped->GetPos()._x - random_x, ped->GetPos()._y - random_y);
+           Point P2 = Point(ped->GetPos()._x + random_x, ped->GetPos()._y + random_y);
+           const NavLine  L = Line(P1, P2);
+           ped->SetExitLine((const NavLine *)&L);
+           target = P1;
       }
       Point desired_direction;
       const Point pos = ped->GetPos();
@@ -365,16 +341,21 @@ Point VelocityModel::e0(Pedestrian* ped, Room* room) const
       Point lastE0 = ped->GetLastE0();
       ped->SetLastE0(target-pos);
 
-      if ( (dynamic_cast<DirectionFloorfield*>(_direction.get())) ||
-           (dynamic_cast<DirectionLocalFloorfield*>(_direction.get())) ||
-           (dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get()))  ) {
+      if ( (dynamic_cast<DirectionFloorfield*>(_direction->GetDirectionStrategy().get())) ||
+           (dynamic_cast<DirectionLocalFloorfield*>(_direction->GetDirectionStrategy().get())) ||
+           (dynamic_cast<DirectionSubLocalFloorfield*>(_direction->GetDirectionStrategy().get()))  ) {
           desired_direction = target-pos;
           if (desired_direction.NormSquare() < 0.25) {
-              desired_direction = lastE0;
-              ped->SetLastE0(lastE0);
-//              Log->Write("desired_direction: %f    %f", desired_direction._x, desired_direction._y);
+               if (!ped->IsWaiting()){
+                    desired_direction = lastE0;
+                    ped->SetLastE0(lastE0);
+               } else {
+                    desired_direction = pos;
+                    ped->SetLastE0(pos);
+               }
               //_direction->GetTarget(room, ped);
           }
+
 //          if (dist > 1*J_EPS_GOAL) {
 //               desired_direction = target - pos; //ped->GetV0(target);
 //          } else {
@@ -577,9 +558,9 @@ Point VelocityModel::ForceRepWall(Pedestrian* ped, const Line& w, const Point& c
      return F_wrep;
 }
 
-string VelocityModel::GetDescription()
+std::string VelocityModel::GetDescription()
 {
-     string rueck;
+     std::string rueck;
      char tmp[CLENGTH];
 
      sprintf(tmp, "\t\ta: \t\tPed: %f \tWall: %f\n", _aPed, _aWall);
@@ -589,10 +570,10 @@ string VelocityModel::GetDescription()
      return rueck;
 }
 
-std::shared_ptr<DirectionStrategy> VelocityModel::GetDirection() const
-{
-     return _direction;
-}
+//std::shared_ptr<DirectionStrategy> VelocityModel::GetDirection() const
+//{
+//     return _direction;
+//}
 
 
 double VelocityModel::GetaPed() const

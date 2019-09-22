@@ -24,6 +24,20 @@
  *
  *
  **/
+#include "EventManager.h"
+
+#include "Event.h"
+
+#include "geometry/SubRoom.h"
+#include "mpi/LCGrid.h"
+#include "pedestrian/Knowledge.h"
+#include "pedestrian/Pedestrian.h"
+#include "router/ff_router/ffRouter.h"
+#include "router/global_shortest/GlobalRouter.h"
+#include "router/quickest/QuickestPathRouter.h"
+#include "router/smoke_router/SmokeRouter.h"
+
+#include <tinyxml.h>
 
 #include <string>
 #include <cstdlib>
@@ -31,31 +45,18 @@
 #include <fstream>
 #include <vector>
 #include <math.h>
-#include "../pedestrian/Pedestrian.h"
-#include "../pedestrian/Knowledge.h"
-#include "../mpi/LCGrid.h"
-#include "../geometry/SubRoom.h"
-#include "../tinyxml/tinyxml.h"
-#include "../routing/global_shortest/GlobalRouter.h"
-#include "../routing/quickest/QuickestPathRouter.h"
-#include "../routing/smoke_router/SmokeRouter.h"
-#include "../routing/ff_router/ffRouter.h"
-#include "EventManager.h"
-#include "Event.h"
 
 using std::map;
 using std::cout;
 using std::endl;
 
-
-EventManager::EventManager(Building *_b, unsigned int seed)
+EventManager::EventManager(Configuration* config, Building *_b, unsigned int seed)
 {
+     _config = config;
      _building = _b;
      _eventCounter = 0;
      _dynamic = false;
      _lastUpdateTime = 0;
-     _projectFilename=_building->GetProjectFilename();
-     _projectRootDir=_building->GetProjectRootDir();
      _updateFrequency =1 ;//seconds
      _updateRadius =2;//meters
 
@@ -84,7 +85,7 @@ bool EventManager::ReadEventsXml()
 {
      Log->Write("INFO: \tLooking for pre-defined events in other files");
      //get the geometry filename from the project file
-     TiXmlDocument doc(_projectFilename);
+     TiXmlDocument doc(_config->GetProjectFile().string());
      if (!doc.LoadFile()) {
           Log->Write("ERROR: \t%s", doc.ErrorDesc());
           Log->Write("ERROR: \t could not parse the project file.");
@@ -93,27 +94,34 @@ bool EventManager::ReadEventsXml()
 
      TiXmlElement* xMainNode = doc.RootElement();
 
-     string realtimefile;
      if (xMainNode->FirstChild("event_realtime")) {
-          realtimefile = _projectRootDir
-                    + xMainNode->FirstChild("event_realtime")->FirstChild()->Value();
-          _file = fopen(realtimefile.c_str(), "r");
+          auto realtimefile = _config->GetProjectRootDir()
+                    / xMainNode->FirstChild("event_realtime")->FirstChild()->Value();
+          _file = fopen(realtimefile.string().c_str(), "r");
           if (!_file) {
-               Log->Write("INFO:\tFiles '"+ realtimefile+ "' missing. "
-                          "Realtime interaction with the simulation not possible.");
+               Log->Write("INFO:\tFiles '%s' missing. "
+                          "Realtime interaction with the simulation not possible.",
+                          realtimefile.string().c_str());
           } else {
-               Log->Write("INFO:\tFile '"+ realtimefile+ "' will be monitored for new events.");
+               Log->Write("INFO:\tFile '%s' will be monitored for new events.",
+                    realtimefile.string().c_str());
                _dynamic = true;
           }
      } else {
           Log->Write("INFO: \tNo realtime events found");
      }
 
-     string eventfile = "";
+     fs::path eventfile{};
      if (xMainNode->FirstChild("events_file")) {
-          eventfile = _projectRootDir
-                    + xMainNode->FirstChild("events_file")->FirstChild()->Value();
-          Log->Write("INFO: \tevents <" + eventfile + ">");
+          eventfile = _config->GetProjectRootDir()
+                    / xMainNode->FirstChild("events_file")->FirstChild()->Value();
+          Log->Write("INFO: \tevents <" + eventfile.string() + ">");
+     } else if (xMainNode->FirstChild("header")){
+          if (xMainNode->FirstChild("header")->FirstChild("events_file")) {
+               eventfile = _config->GetProjectRootDir()
+                       / xMainNode->FirstChild("header")->FirstChild("events_file")->FirstChild()->Value();
+               Log->Write("INFO: \tevents <" + eventfile.string() + ">");
+          }
      } else {
           Log->Write("INFO: \tNo events found");
           return true;
@@ -121,7 +129,7 @@ bool EventManager::ReadEventsXml()
 
 
      Log->Write("INFO: \tParsing the event file");
-     TiXmlDocument docEvent(eventfile);
+     TiXmlDocument docEvent(eventfile.string());
      if (!docEvent.LoadFile()) {
           Log->Write("ERROR: \t%s", docEvent.ErrorDesc());
           Log->Write("ERROR: \t could not parse the event file.");
@@ -154,8 +162,8 @@ bool EventManager::ReadEventsXml()
 
           int id = atoi(e->Attribute("id"));
           double zeit = atoi(e->Attribute("time"));
-          string state (e->Attribute("state"));
-          string type (e->Attribute("type"));
+          std::string state (e->Attribute("state"));
+          std::string type (e->Attribute("type"));
           _events.push_back(Event(id,zeit,type,state));
      }
      Log->Write("INFO: \tEvents were initialized");
@@ -164,6 +172,7 @@ bool EventManager::ReadEventsXml()
      //FIXME: creating some engine before starting is not working.
      // seom doors are still perceived as beeing closed.
      //CreateSomeEngines();
+
      return true;
 }
 
@@ -232,14 +241,14 @@ bool EventManager::DisseminateKnowledge(Building* _b)
 
      for(auto&& ped1:_b->GetAllPedestrians())
      {
-          vector<Pedestrian*> neighbourhood;
+          std::vector<Pedestrian*> neighbourhood;
           _b->GetGrid()->GetNeighbourhood(ped1,neighbourhood);
           for(auto&& ped2:neighbourhood)
           {
                if( (ped1->GetPos()-ped2->GetPos()).Norm()<_updateRadius)
                {
                     //maybe same room and subroom ?
-                    vector<SubRoom*> empty;
+                    std::vector<SubRoom*> empty;
                     if(_b->IsVisible(ped1->GetPos(),ped2->GetPos(),empty))
                     {
                          //if(!SynchronizeKnowledge(ped1, ped2))  //ped1->SetSpotlight(true);
@@ -284,7 +293,7 @@ bool EventManager::UpdateRoute(Pedestrian* ped)
 {
      //create the key as string.
      //map are sorted by default
-     string key= ped->GetKnowledgeAsString();
+     std::string key= ped->GetKnowledgeAsString();
 //     std::cout << "key: <" << key << ">" << std::endl;
      //get the router engine corresponding to the actual configuration
      bool status=true;
@@ -525,15 +534,21 @@ void EventManager::ProcessEvent()
           if (fabs(event.GetTime() - current_time_d) < J_EPS_EVENT) {
                //Event with current time stamp detected
                Log->Write("INFO:\tEvent: after %.2f sec: ", current_time_d);
-               switch (event.GetState()){
-               case DoorState::OPEN:
+               switch (event.GetAction()){
+               case EventAction::OPEN:
                     OpenDoor(event.GetId());
                     break;
-               case DoorState::CLOSE:
+               case EventAction::CLOSE:
                     CloseDoor(event.GetId());
                     break;
-               case DoorState::TEMP_CLOSE:
+               case EventAction::TEMP_CLOSE:
                     TempCloseDoor(event.GetId());
+                    break;
+               case EventAction::RESET_USAGE:
+                    ResetDoor(event.GetId());
+                    break;
+               case EventAction::NOTHING:
+                    Log->Write("WARNING:\t Unknown event action in events. open, close, reset or temp_close. Default: do nothing");
                     break;
                }
                _building->GetRoutingEngine()->setNeedUpdate(true);
@@ -603,12 +618,26 @@ void EventManager::OpenDoor(int id)
      }
 }
 
+//resets the door if it was open and relaunch the routing procedure
+void EventManager::ResetDoor(int id)
+{
+     Transition *t = _building->GetTransition(id);
+     t->ResetDoorUsage();
+
+     Log->Write("INFO:\tResetting door usage %d ", id);
+
+     if(CreateRoutingEngine(_building)==false)
+     {
+          Log->Write("ERROR: \tcannot create a routing engine with the new event");
+     }
+}
+
 void EventManager::GetEvent(char* c)
 {
      int split = 0;
-     string type = "";
-     string id = "";
-     string state = "";
+     std::string type = "";
+     std::string id = "";
+     std::string state = "";
      for (int i = 0; i < 20; i++) {
           if (!c[i]) {
                break;
@@ -646,7 +675,7 @@ bool EventManager::CreateRoutingEngine(Building* _b, int first_engine)
      std::sort(closed_doors.begin(), closed_doors.end());
 
      //create the key as string.
-     string key="";
+     std::string key="";
      for(int door:closed_doors)
      {
           if(key.empty())
@@ -721,11 +750,12 @@ Router * EventManager::CreateRouter(const RoutingStrategy& strategy)
                break;
 
           case ROUTING_FF_GLOBAL_SHORTEST:
-               rout = new FFRouter(ROUTING_FF_GLOBAL_SHORTEST, ROUTING_FF_GLOBAL_SHORTEST, _building->GetConfig()->get_has_specific_goals(), _building->GetConfig());
+               rout = new FFRouter(ROUTING_FF_GLOBAL_SHORTEST, ROUTING_FF_GLOBAL_SHORTEST, _config->get_has_specific_goals(), _config);
                break;
 
           case ROUTING_FF_QUICKEST:
-               rout = new FFRouter(ROUTING_FF_QUICKEST, ROUTING_FF_QUICKEST, _building->GetConfig()->get_has_specific_goals(), _building->GetConfig());
+               rout = new FFRouter(ROUTING_FF_QUICKEST, ROUTING_FF_QUICKEST, _config->get_has_specific_goals(), _config);
+               break;
 
           default:
                Log->Write("ERROR: \twrong value for routing strategy [%d]!!!\n", strategy );
@@ -798,7 +828,7 @@ bool EventManager::ReadSchedule()
 {
      Log->Write("INFO: \tReading schedule");
      //get the geometry filename from the project file
-     TiXmlDocument doc(_projectFilename);
+     TiXmlDocument doc(_config->GetProjectFile().string());
      if (!doc.LoadFile()) {
           Log->Write("ERROR: \t%s", doc.ErrorDesc());
           Log->Write("ERROR: \t could not parse the project file.");
@@ -807,11 +837,11 @@ bool EventManager::ReadSchedule()
 
      TiXmlElement* xMainNode = doc.RootElement();
 
-     string scheduleFile = "";
+     fs::path scheduleFile = "";
      if (xMainNode->FirstChild("schedule_file")) {
-          scheduleFile = _projectRootDir
-                    + xMainNode->FirstChild("schedule_file")->FirstChild()->Value();
-          Log->Write("INFO: \tevents <" + scheduleFile + ">");
+          scheduleFile = _config->GetProjectRootDir()
+                    / xMainNode->FirstChild("schedule_file")->FirstChild()->Value();
+          Log->Write("INFO: \tevents <" + scheduleFile.string() + ">");
      } else {
           Log->Write("INFO: \tNo events found");
           return true;
@@ -819,7 +849,7 @@ bool EventManager::ReadSchedule()
 
 
      Log->Write("INFO: \tParsing the schedule file");
-     TiXmlDocument docSchedule(scheduleFile);
+     TiXmlDocument docSchedule(scheduleFile.string());
      if (!docSchedule.LoadFile()) {
           Log->Write("ERROR: \t%s", docSchedule.ErrorDesc());
           Log->Write("ERROR: \t could not parse the schedule file.");
@@ -895,4 +925,3 @@ bool EventManager::ReadSchedule()
 
      return true;
 }
-

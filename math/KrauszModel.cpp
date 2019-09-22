@@ -27,25 +27,20 @@
  *
  *
  **/
-
-
 #include "KrauszModel.h"
-#include "../pedestrian/Pedestrian.h"
-#include "../mpi/LCGrid.h"
-#include "../geometry/SubRoom.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_thread_num() 0
-#define omp_get_max_threads()  1
-#endif
+#include "general/OpenMP.h"
+#include "geometry/SubRoom.h"
+#include "geometry/Wall.h"
+#include "mpi/LCGrid.h"
+#include "pedestrian/Pedestrian.h"
+#include "direction/DirectionManager.h"
+#include "direction/walking/DirectionFloorfield.h"
+#include "direction/walking/DirectionLocalFloorfield.h"
+#include "direction/walking/DirectionSubLocalFloorfield.h"
 
 
-using std::vector;
-using std::string;
-
-KrauszModel::KrauszModel(std::shared_ptr<DirectionStrategy> dir, double nuped, double nuwall, double dist_effPed,
+KrauszModel::KrauszModel(std::shared_ptr<DirectionManager> dir, double nuped, double nuwall, double dist_effPed,
                      double dist_effWall, double intp_widthped, double intp_widthwall, double maxfped,
                      double maxfwall)
 {
@@ -69,34 +64,10 @@ KrauszModel::~KrauszModel(void)
 
 bool KrauszModel::Init (Building* building)
 {
-     if(auto dirff = dynamic_cast<DirectionFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionFloorfield starting ...");
-          double _deltaH = building->GetConfig()->get_deltaH();
-          double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
-          bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
-          dirff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionFloorfield done");
-     }
 
-     if(auto dirlocff = dynamic_cast<DirectionLocalFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionLOCALFloorfield starting ...");
-          double _deltaH = building->GetConfig()->get_deltaH();
-          double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
-          bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
-          dirlocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionLOCALFloorfield done");
-     }
+     _direction->Init(building);
 
-     if(auto dirsublocff = dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfield starting ...");
-          double _deltaH = building->GetConfig()->get_deltaH();
-          double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
-          bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
-          dirsublocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init DirectionSubLOCALFloorfield done");
-     }
-
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
      size_t peds_size = allPeds.size();
      for(unsigned int p=0;p<peds_size;p++)
      {
@@ -137,7 +108,7 @@ void KrauszModel::ComputeNextTimeStep(double current, double deltaT, Building* b
      double delta = 1.5;
 
      // collect all pedestrians in the simulation.
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
 
      unsigned int nSize = allPeds.size();
      int nThreads = omp_get_max_threads();
@@ -152,7 +123,7 @@ void KrauszModel::ComputeNextTimeStep(double current, double deltaT, Building* b
      //building->GetGrid()->HighlightNeighborhood(debugPed, building);
 #pragma omp parallel  default(shared) num_threads(nThreads)
      {
-          vector< Point > result_acc = vector<Point > ();
+          std::vector< Point > result_acc = std::vector<Point > ();
           result_acc.reserve(2200);
 
           const int threadID = omp_get_thread_num();
@@ -183,10 +154,10 @@ void KrauszModel::ComputeNextTimeStep(double current, double deltaT, Building* b
                }
 
                Point F_rep;
-               vector<Pedestrian*> neighbours;
+               std::vector<Pedestrian*> neighbours;
                building->GetGrid()->GetNeighbourhood(ped,neighbours);
                //if(ped->GetID()==61) building->GetGrid()->HighlightNeighborhood(ped,building);
-               vector<SubRoom*> emptyVector;
+               std::vector<SubRoom*> emptyVector;
 
                int neighborsSize = neighbours.size();
                for (int i = 0; i < neighborsSize; i++) {
@@ -270,9 +241,9 @@ inline  Point KrauszModel::ForceDriv(Pedestrian* ped, Room* room) const
      Point lastE0 = ped->GetLastE0();
      ped->SetLastE0(target-pos);
 
-     if (  (dynamic_cast<DirectionFloorfield*>(_direction.get())) ||
-           (dynamic_cast<DirectionLocalFloorfield*>(_direction.get())) ||
-           (dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get()))  ) {
+     if (  (dynamic_cast<DirectionFloorfield*>(_direction->GetDirectionStrategy().get())) ||
+           (dynamic_cast<DirectionLocalFloorfield*>(_direction->GetDirectionStrategy().get())) ||
+           (dynamic_cast<DirectionSubLocalFloorfield*>(_direction->GetDirectionStrategy().get()))  ) {
           if (dist > 50*J_EPS_GOAL) {
                const Point& v0 = ped->GetV0(target);
                F_driv = ((v0 * ped->GetV0Norm() - ped->GetV()) * ped->GetMass()) / ped->GetTau();
@@ -635,11 +606,11 @@ Point KrauszModel::ForceInterpolation(double v0, double K_ij, const Point& e, do
 
 // Getter-Funktionen
 
-std::shared_ptr<DirectionStrategy> KrauszModel::GetDirection() const
-{
-     return _direction;
-}
-
+//std::shared_ptr<DirectionStrategy> KrauszModel::GetDirection() const
+//{
+//     return _direction;
+//}
+//
 double KrauszModel::GetNuPed() const
 {
      return _nuPed;
@@ -680,9 +651,9 @@ double KrauszModel::GetDistEffMaxWall() const
      return _distEffMaxWall;
 }
 
-string KrauszModel::GetDescription()
+std::string KrauszModel::GetDescription()
 {
-     string rueck;
+     std::string rueck;
      char tmp[CLENGTH];
 
      sprintf(tmp, "\t\tNu: \t\tPed: %f \tWall: %f\n", _nuPed, _nuWall);

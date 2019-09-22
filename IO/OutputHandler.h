@@ -24,21 +24,17 @@
  *
  *
  **/
+#pragma once
 
-
-#ifndef OUTPUT_HANDLER_H_
-#define OUTPUT_HANDLER_H_
+#include "general/Filesystem.h"
+#include "general/Macros.h"
+#ifdef _SIMULATOR
+#include "IO/TraVisToClient.h"
+#endif
 
 #include <iostream>
 #include <fstream>
 #include <vector>
-
-#include "../general/Macros.h"
-
-#ifdef _SIMULATOR
-#include "../IO/TraVisToClient.h"
-#endif
-
 
 class OutputHandler {
 protected:
@@ -63,17 +59,17 @@ public:
 
 class STDIOHandler : public OutputHandler {
 public:
-     void Write(const std::string& str);
+     void Write(const std::string& str) override;
 };
 
 class FileHandler : public OutputHandler {
 private:
      std::ofstream _pfp;
 public:
-     FileHandler(const char *fn);
-     virtual ~FileHandler();
-     void Write(const std::string& str);
-     void Write(const char *string,...);
+     FileHandler(const fs::path& path);
+     ~FileHandler() override;
+     void Write(const std::string& str) override;
+     void Write(const char *string,...) override;
 };
 
 #ifdef _SIMULATOR
@@ -84,13 +80,11 @@ private:
 
 public:
      SocketHandler(const std::string& host, int port);
-     virtual ~SocketHandler();
-     void Write(const std::string& str);
+     ~SocketHandler() override;
+     void Write(const std::string& str) override;
 
      //Some tags are broken
      std::vector<std::string> brokentags;
 };
 
 #endif
-
-#endif /*OUTPUT_HANDLER_H_*/

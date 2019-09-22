@@ -27,15 +27,13 @@
  *
  *
  **/
+#pragma once
 
+#include "OperationalModel.h"
 
-#ifndef VELOCITYMODEL_H_
-#define VELOCITYMODEL_H_
+#include "geometry/Building.h"
 
 #include <vector>
-
-#include "../geometry/Building.h"
-#include "OperationalModel.h"
 
 typedef std::pair<double, double> my_pair;
 // sort with respect to first element (ascending).
@@ -53,7 +51,7 @@ struct sort_pred
 
 //forward declaration
 class Pedestrian;
-class DirectionStrategy;
+class DirectionManager;
 
 /*!
  * \class VelocityModel
@@ -137,12 +135,12 @@ private:
 
 public:
 
-     VelocityModel(std::shared_ptr<DirectionStrategy> dir, double aped, double Dped,
+     VelocityModel(std::shared_ptr<DirectionManager> dir, double aped, double Dped,
                    double awall, double Dwall);
      virtual ~VelocityModel(void);
 
 
-     std::shared_ptr<DirectionStrategy> GetDirection() const;
+//     std::shared_ptr<DirectionStrategy> GetDirection() const;
 
      /**
       * @todo What is this parameter doing?
@@ -194,6 +192,3 @@ public:
       */
      virtual void ComputeNextTimeStep(double current, double deltaT, Building* building, int periodic);
 };
-
-
-#endif

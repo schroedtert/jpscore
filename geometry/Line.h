@@ -24,19 +24,17 @@
  *
  *
  **/
-
-
-#ifndef _LINE_H
-#define _LINE_H
+#pragma once
 
 #include "Point.h"
-#include "../IO/OutputHandler.h"
+
+#include "IO/OutputHandler.h"
 
 #include <string>
+#include <vector>
 
 //forward declarations
 class OutputHandler;
-
 class Wall;
 
 // external variables
@@ -60,9 +58,7 @@ public:
 
      Line(const Point& p1, const Point& p2);
 
-     Line(const Line& orig);
-
-     virtual ~Line();
+     virtual ~Line() = default;
 
      /**
       * All Line elements (also derived class) have a unique ID
@@ -134,6 +130,7 @@ public:
      bool IsInLineSegment(const Point& p) const;
 
      bool NearlyInLineSegment(const Point& p) const;
+     bool NearlyHasEndPoint(const Point& point) const;
 
      /**
       * @return the distance from the line to the point p
@@ -162,6 +159,12 @@ public:
      bool Overlapp(const Line& l) const;
 
      /**
+      * return true if point the orthogonal projection of p on Line segment is on the
+      * line segment.
+      */
+     bool isBetween(const Point& p) const;
+
+     /**
       * @return true if both segments are equal. The end points must be in the range of J_EPS.
       * @see Macro.h
       */
@@ -172,6 +175,15 @@ public:
       * @see Macro.h
       */
      bool operator!=(const Line& l) const;
+
+
+     /**
+      * @return true if this < l segments are not equal. The end points must be in the range of J_EPS.
+      * @see Macro.h
+      */
+     bool operator<(const Line& l) const;
+
+
 
      /**
       * @see http://alienryderflex.com/intersect/
@@ -306,5 +318,3 @@ private:
      }
 
 };
-
-#endif  /* _LINE_H */

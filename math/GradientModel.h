@@ -27,21 +27,19 @@
  *
  *
  **/
+#pragma once
 
+#include "ForceModel.h"
 
-#ifndef GRADIENTMODEL_H_
-#define GRADIENTMODEL_H_
+#include "geometry/Building.h"
 
 #include <vector>
-
-#include "../geometry/Building.h"
-#include "ForceModel.h"
 
 #define _ARNEDEBUG
 
 //forward declaration
 class Pedestrian;
-class DirectionStrategy;
+class DirectionManager;
 
 
 /*!
@@ -121,13 +119,13 @@ private:
 
 public:
 
-     GradientModel(std::shared_ptr<DirectionStrategy> dir, double nuped, double aped, double bped, double cped,
+     GradientModel(std::shared_ptr<DirectionManager> dir, double nuped, double aped, double bped, double cped,
                    double nuwall, double awall, double bwall, double cwall,
                    double deltaH, double wallAvoidDistance, bool useWallAvoidance,
                    double slowDownDistance);
      virtual ~GradientModel(void);
 
-     std::shared_ptr<DirectionStrategy> GetDirection() const;
+//     std::shared_ptr<DirectionStrategy> GetDirection() const;
      /**
       * Get the parameter for the strength of the ped-PED repulsive force
       *
@@ -237,6 +235,3 @@ public:
       */
      //virtual std::string writeParameter() const;
 };
-
-
-#endif /* GRADIENTMODEL_H_ */

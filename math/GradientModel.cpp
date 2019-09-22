@@ -27,26 +27,21 @@
  *
  *
  **/
-
-#include <math.h>
-#include "../pedestrian/Pedestrian.h"
-#include "../mpi/LCGrid.h"
-#include "../geometry/Wall.h"
-#include "../geometry/SubRoom.h"
-
 #include "GradientModel.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_thread_num() 0
-#define omp_get_max_threads()  1
-#endif
+#include "general/OpenMP.h"
+#include "geometry/SubRoom.h"
+#include "geometry/Wall.h"
+#include "mpi/LCGrid.h"
+#include "pedestrian/Pedestrian.h"
+#include "direction/DirectionManager.h"
+#include "direction/walking/DirectionFloorfield.h"
+#include "direction/walking/DirectionLocalFloorfield.h"
+#include "direction/walking/DirectionSubLocalFloorfield.h"
 
-using std::vector;
-using std::string;
+#include <math.h>
 
-GradientModel::GradientModel(std::shared_ptr<DirectionStrategy> dir, double nuped, double aped, double bped, double cped,
+GradientModel::GradientModel(std::shared_ptr<DirectionManager> dir, double nuped, double aped, double bped, double cped,
                              double nuwall, double awall, double bwall, double cwall,
                              double deltaH, double wallAvoidDistance, bool useWallAvoidance,
                              double slowDownDistance)
@@ -95,34 +90,44 @@ GradientModel::~GradientModel()
 bool GradientModel::Init (Building* building)
 {
 
-    if(auto dirff = dynamic_cast<DirectionFloorfield*>(_direction.get())){
-         Log->Write("INFO:\t Init DirectionFloorfield starting ...");
-         dirff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-         Log->Write("INFO:\t Init DirectionFloorfield done");
-    }
+     _direction->Init(building);
+//     if(auto dirff = dynamic_cast<DirectionFloorfield*>(_direction.get())){
+//          Log->Write("INFO:\t Init DirectionFloorfield starting ...");
+//          double _deltaH = building->GetConfig()->get_deltaH();
+//          double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
+//          bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
+//          dirff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
+//          Log->Write("INFO:\t Init DirectionFloorfield done");
+//     }
+//
+//     if(auto dirlocff = dynamic_cast<DirectionLocalFloorfield*>(_direction.get())){
+//          Log->Write("INFO:\t Init DirectionLOCALFloorfield starting ...");
+//          double _deltaH = building->GetConfig()->get_deltaH();
+//          double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
+//          bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
+//          dirlocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
+//          Log->Write("INFO:\t Init DirectionLOCALFloorfield done");
+//     }
+//
+//     if(auto dirsublocff = dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get())){
+//          Log->Write("INFO:\t Init DirectionSubLOCALFloorfield starting ...");
+//          double _deltaH = building->GetConfig()->get_deltaH();;
+//          double _wallAvoidDistance = building->GetConfig()->get_wall_avoid_distance();
+//          bool _useWallAvoidance = building->GetConfig()->get_use_wall_avoidance();
+//          dirsublocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
+//          Log->Write("INFO:\t Init DirectionSubLOCALFloorfield done");
+//     }
 
-     if(auto dirlocff = dynamic_cast<DirectionLocalFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init Direction LOCAL Floorfield starting ...");
-          dirlocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init Direction LOCAL Floorfield done");
-     }
-
-     if(auto dirsublocff = dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get())){
-          Log->Write("INFO:\t Init Direction SubLOCAL Floorfield starting ...");
-          dirsublocff->Init(building, _deltaH, _wallAvoidDistance, _useWallAvoidance);
-          Log->Write("INFO:\t Init Direction SubLOCAL Floorfield done");
-     }
-
-
-     const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+     const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
 
      std::vector<Pedestrian*> pedsToRemove;
      pedsToRemove.clear();
      bool error_occurred = false;
 #pragma omp parallel for
-    for(signed int p=0;p<allPeds.size();p++) {
+    for(size_t p=0;p<allPeds.size();p++) {
          Pedestrian* ped = allPeds[p];
-         double cosPhi, sinPhi;
+         double cosPhi = 0;
+         double sinPhi = 0;
          //a destination could not be found for that pedestrian
          if (ped->FindRoute() == -1) {
               Log->Write(
@@ -171,7 +176,7 @@ void GradientModel::ComputeNextTimeStep(double current, double deltaT, Building*
 {
      double delta = 0.5;
       // collect all pedestrians in the simulation.
-      const vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
+      const std::vector< Pedestrian* >& allPeds = building->GetAllPedestrians();
 
      unsigned long nSize;
      nSize = allPeds.size();
@@ -198,7 +203,7 @@ void GradientModel::ComputeNextTimeStep(double current, double deltaT, Building*
 
       #pragma omp parallel  default(shared) num_threads(nThreads)
       {
-           vector< Point > result_acc = vector<Point > ();
+           std::vector< Point > result_acc = std::vector<Point > ();
            result_acc.reserve(nSize);
 
            const int threadID = omp_get_thread_num();
@@ -234,7 +239,7 @@ void GradientModel::ComputeNextTimeStep(double current, double deltaT, Building*
                 }
 
                 Point repPed = Point(0,0);
-                vector<Pedestrian*> neighbours;
+                std::vector<Pedestrian*> neighbours;
                 building->GetGrid()->GetNeighbourhood(ped,neighbours);
                 int size = (int) neighbours.size();
                 for (int i = 0; i < size; i++) {
@@ -248,7 +253,7 @@ void GradientModel::ComputeNextTimeStep(double current, double deltaT, Building*
                      Point p2 = ped1->GetPos();
 
                      //subrooms to consider when looking for neighbour for the 3d visibility
-                     vector<SubRoom*> emptyVector;
+                     std::vector<SubRoom*> emptyVector;
                      emptyVector.push_back(subroom);
                      emptyVector.push_back(building->GetRoom(ped1->GetRoomID())->GetSubRoom(ped1->GetSubRoomID()));
 
@@ -303,13 +308,13 @@ void GradientModel::ComputeNextTimeStep(double current, double deltaT, Building*
                 //redirect near wall mechanics:
                 Point dir2Wall = Point{0., 0.};
                 double distance2Wall = -1.;
-                if (auto dirff = dynamic_cast<DirectionFloorfield*>(_direction.get())) {
+                if (auto dirff = dynamic_cast<DirectionFloorfield*>(_direction->GetDirectionStrategy().get())) {
                      dir2Wall = dirff->GetDir2Wall(ped);
                      distance2Wall = dirff->GetDistance2Wall(ped);
-                } else if (auto dirlocff = dynamic_cast<DirectionLocalFloorfield*>(_direction.get())) {
+                } else if (auto dirlocff = dynamic_cast<DirectionLocalFloorfield*>(_direction->GetDirectionStrategy().get())) {
                      dir2Wall = dirlocff->GetDir2Wall(ped);
                      distance2Wall = dirlocff->GetDistance2Wall(ped);
-                } else if (auto dirsublocff = dynamic_cast<DirectionSubLocalFloorfield*>(_direction.get())) {
+                } else if (auto dirsublocff = dynamic_cast<DirectionSubLocalFloorfield*>(_direction->GetDirectionStrategy().get())) {
                      dir2Wall = dirsublocff->GetDir2Wall(ped);
                      distance2Wall = dirsublocff->GetDistance2Wall(ped);
                 } else {
@@ -584,7 +589,7 @@ Point GradientModel::ForceRepWall(Pedestrian* ped, const Line& w) const
 
 std::string GradientModel::GetDescription()
 {
-     string rueck;
+     std::string rueck;
      char tmp[CLENGTH];
      sprintf(tmp, "\t\tNu: \t\tPed: %f \tWall: %f\n", _nuPed, _nuWall);
      rueck.append(tmp);
@@ -597,10 +602,10 @@ std::string GradientModel::GetDescription()
      return rueck;
 }
 
-std::shared_ptr<DirectionStrategy> GradientModel::GetDirection() const
-{
-     return _direction;
-}
+//std::shared_ptr<DirectionStrategy> GradientModel::GetDirection() const
+//{
+//     return _direction;
+//}
 
 double GradientModel::GetNuPed() const
 {

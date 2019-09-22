@@ -24,16 +24,10 @@
  *
  *
  **/
+#pragma once
 
-
-#ifndef _CROSSING_H
-#define _CROSSING_H
-
-#include "NavLine.h"
 #include "Hline.h"
 
-//class Line;
-class Room;
 class SubRoom;
 
 class Crossing : public Hline {
@@ -195,6 +189,12 @@ public:
     void IncreasePartialDoorUsage(int number);
     void ResetPartialDoorUsage();
     int GetPartialDoorUsage() const;
+
+    /**
+     * Resets the number of pedestrians that used that crossing
+     */
+    void ResetDoorUsage();
+
     /**
      * @return the number of pedestrians that used that crossing.
      */
@@ -245,17 +245,18 @@ public:
     void UpdateClosingTime(double dt);
 
     /**
-     * changes two private variables
-     * _temporaryClosed is false
-     * and _closingTime is 0
+     * Updates the state of temp closed doors. Door will be openend if it is
+     * closed due to flow regulation if maxDoorUsage is not reached yet.
+     *
+     * @param[in] dt
      */
-    void changeTemporaryState();
+    void UpdateTemporaryState(double dt);
     double GetDT();
     void SetDT(double dt);
     int GetDN();
     void SetDN(int dt);
 
-    void regulateFlow(double time);
+    bool RegulateFlow(double time);
 
     DoorState GetState() const;
 
@@ -265,5 +266,3 @@ public:
 
     virtual DoorState checkOneDir(int roomID, int subroomID) const;
 };
-
-#endif  /* _CROSSING_H */

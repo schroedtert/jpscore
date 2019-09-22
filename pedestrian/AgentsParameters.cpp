@@ -27,11 +27,9 @@
  *
  *
  **/
-
-
 #include "AgentsParameters.h"
-#include "../general/Macros.h"
-//#include <random>
+
+#include "general/Macros.h"
 
 AgentsParameters::AgentsParameters(int id, int seed)
 {
@@ -430,6 +428,14 @@ std::string AgentsParameters::writeParameter()
 	}
     s.append(tmp);
     return s;
+}
+
+double AgentsParameters::GetAminMean() {
+    return _Amin.mean();
+}
+
+double AgentsParameters::GetBmaxMean() {
+    return _Bmax.mean();
 }
 
 

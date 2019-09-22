@@ -63,6 +63,7 @@ Matrix.txt
 # Hidden files
 .*
 !/.gitignore
+!/.clang-format
 
 # Cmake
 CMakeCache.txt
@@ -172,5 +173,6 @@ packages/
 
 /doc*
 /cmake-*
+!/cmake_modules
 /issues
 /latex

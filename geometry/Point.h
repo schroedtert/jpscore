@@ -27,15 +27,14 @@
  *
  *
  **/
- 
+#pragma once
 
-#ifndef _POINT_H
-#define _POINT_H
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry.hpp>
+
 #include <string>
 #include <math.h>
 #include <iostream>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry.hpp>
 
 class Point {
 public:
@@ -52,13 +51,6 @@ public:
       * @param [in] y: y-coordinate as double
       */
      Point(double x = 0, double y = 0) : _x(x), _y(y) {};
-
-     /**
-      * **Copy-Ctor**
-      * Constructs a new point as copy of the original point.
-      * @param [in] orig: original point which shall be copied
-      */
-     Point(const Point& orig);
 
      /// Norm
      double Norm() const;
@@ -106,7 +98,6 @@ public:
      /// rotate the vector by theta
      Point Rotate(double ctheta, double stheta) const;
 
-
      // operators
      /// addition
      const Point operator+(const Point& p) const;
@@ -148,10 +139,15 @@ BOOST_GEOMETRY_REGISTER_POINT_2D(Point, double, cs::cartesian, _x, _y);
  */
 double Distance(const Point&, const Point&);
 
+/**
+ * Computes the angle between the 2 given points
+ * @param [in] point1
+ *  * @param [in] point2
+ * @return distance between point1 and point2
+
+ */
+double Angle(const Point&, const Point&);
 /// multiplication
 const Point operator*(const Point& p, const double f);
 /// division
 const Point operator/(const Point& p, const double f);
-
-#endif  /* _POINT_H */
-
