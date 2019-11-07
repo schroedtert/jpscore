@@ -70,4 +70,3 @@ file(GLOB CT_FILES "${CMAKE_SOURCE_DIR}/${CT_DATA_FILE_DIR}/*/*")
 install(FILES ${CT_FILES}
   DESTINATION "jpscore_samples"
   COMPONENT jpscore_samples)
-

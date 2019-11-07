@@ -101,8 +101,8 @@ set(header_files
     src/general/Filesystem.h
     src/general/Logger.h
     src/general/Macros.h
-    src/general/randomnumbergenerator.h
-    src/geometry/Building.h
+        src/general/Random.h
+        src/geometry/Building.h
     src/geometry/Crossing.h
     src/geometry/Goal.h
     src/geometry/GoalManager.h
