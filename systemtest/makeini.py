@@ -68,7 +68,8 @@ attributes_tags = ['group-pre_movement_mean',
                    'force_wall-c',
                    'source-frequency',
                    'source-agents_max',
-               ]
+                   'door-outflow'
+                   ]
 
 
 # cor_tags = np.unique([att.split("_")[0] for att in attributes_tags]).astype(str)a

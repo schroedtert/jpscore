@@ -1,11 +1,9 @@
-file(GLOB_RECURSE test_py_files "${CMAKE_SOURCE_DIR}/systemtest/door_tests/*/*_door_*.py")
-foreach (file ${test_py_files})
-    get_filename_component(test ${file} NAME_WE)
-    add_test(
-            NAME ${test}
-            COMMAND ${PYTHON_EXECUTABLE} ${file} ${jpscore_exe}
-    )
-    set_tests_properties(
-            ${test}
-            PROPERTIES LABELS "CI:FAST")
-endforeach ()
+add_test(NAME door_flow_regulation COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/systemtest/door_tests/test_flow_regulation/01_door_flow_regulation.py ${jpscore_exe})
+set_tests_properties(
+        door_flow_regulation
+        PROPERTIES LABELS "CI:FAST")
+
+add_test(NAME door_flow_regulation_slow COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/systemtest/door_tests/test_flow_regulation_slow/02_door_flow_regulation_slow.py ${jpscore_exe})
+set_tests_properties(
+        door_flow_regulation_slow
+        PROPERTIES LABELS "CI:MEDIUM")
