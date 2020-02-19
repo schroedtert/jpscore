@@ -91,6 +91,7 @@ set(source_files
     src/routing/smoke_router/sensor/SensorManager.cpp
     src/routing/smoke_router/SmokeRouter.cpp
     src/Simulation.cpp
+    src/SimulationHelper.cpp
     src/voronoi-boost/VoronoiPositionGenerator.cpp
 )
 set(header_files
@@ -177,6 +178,8 @@ set(header_files
     src/routing/smoke_router/sensor/RoomToFloorSensor.h
     src/routing/smoke_router/sensor/SensorManager.h
     src/routing/smoke_router/SmokeRouter.h
+    src/Simulation.h
+    src/SimulationHelper.h
     src/voronoi-boost/VoronoiPositionGenerator.h
 )
 
@@ -254,6 +257,7 @@ if (BUILD_CPPUNIT_TEST)
             test/catch2/geometry/PointTest.cpp
             test/catch2/geometry/RoomTest.cpp
             test/catch2/geometry/SubRoomTest.cpp
+            test/catch2/simulation/SimulationTest.cpp
             test/catch2/Main.cpp
             test/catch2/math/MathematicsTest.cpp
             test/catch2/pedestrian/EllipseTest.cpp
