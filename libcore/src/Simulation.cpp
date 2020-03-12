@@ -328,11 +328,23 @@ void Simulation::UpdateRoutesAndLocations()
     } else
 #endif
     {
-        // remove the pedestrians that have left the building
-        for(auto p : pedsToRemove) {
-            UpdateFlowAtDoors(*p);
-            _building->DeletePedestrian(p);
+        //        // remove the pedestrians that have left the building
+        //        for(auto p : pedsToRemove) {
+        //            UpdateFlowAtDoors(*p);
+        //            _building->DeletePedestrian(p);
+        //        }
+        //        pedsToRemove.clear();
+        std::vector<Pedestrian *> pedsToAdd(pedsToRemove.begin(), pedsToRemove.end());
+        double xmin = -0.5;
+        double xmax = 0.5;
+        double ymin = 15;
+        double ymax = 17;
+        for(auto ped : pedsToAdd) {
+            double x = (xmax - xmin) * ((double) rand() / (double) RAND_MAX) + xmin;
+            double y = (ymax - ymin) * ((double) rand() / (double) RAND_MAX) + ymin;
+            ped->SetPos({x, y});
         }
+        AgentsQueueIn::Add(pedsToAdd);
         pedsToRemove.clear();
     }
 }
