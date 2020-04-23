@@ -113,9 +113,14 @@ Building::Building(Configuration * configuration, PedDistributor & pedDistributo
         exit(EXIT_FAILURE);
     }
 
-    _trainTypes = TrainFileParser::ParseTrainType(_configuration->GetTrainTypeFile());
-    _trainTimeTables =
-        TrainFileParser::ParseTrainTimetable(_configuration->GetTrainTimeTableFile());
+    if(!_configuration->GetTrainTypeFile().empty()) {
+        _trainTypes = TrainFileParser::ParseTrainType(_configuration->GetTrainTypeFile());
+    }
+
+    if(!_configuration->GetTrainTimeTableFile().empty()) {
+        _trainTimeTables =
+            TrainFileParser::ParseTrainTimetable(_configuration->GetTrainTimeTableFile());
+    }
 }
 
 #endif
@@ -560,6 +565,8 @@ bool Building::resetGeometry(const TrainTimeTable & tab)
 
     /*       // remove added doors */
     auto tempDoors = TempAddedDoors[tab.id];
+    std::set<SubRoom *> subRoomsToReInit;
+
     for(auto it = tempDoors.begin(); it != tempDoors.end();) {
         auto door = *it;
         if(it != tempDoors.end()) {
@@ -571,6 +578,8 @@ bool Building::resetGeometry(const TrainTimeTable & tab)
             subroom_id  = platform.second->sid;
             SubRoom * subroom =
                 this->GetAllRooms().at(room_id)->GetAllSubRooms().at(subroom_id).get();
+            subRoomsToReInit.insert(subroom);
+
             for(auto subTrans : subroom->GetAllTransitions()) {
                 if(*subTrans == door) {
                     // Trnasitions are added to subrooms and building!!
@@ -581,8 +590,13 @@ bool Building::resetGeometry(const TrainTimeTable & tab)
         }
     }
     TempAddedDoors[tab.id] = tempDoors;
+
+    std::for_each(std::begin(subRoomsToReInit), std::end(subRoomsToReInit), [](SubRoom * subroom) {
+        subroom->Update();
+    });
     return true;
 }
+
 void Building::InitPlatforms()
 {
     int num_platform = -1;
