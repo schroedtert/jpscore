@@ -31,6 +31,7 @@
 #include "Pedestrian.h"
 
 #include <Logger.h>
+#include <utility>
 
 AgentsSource::AgentsSource(
     int id,
@@ -64,24 +65,22 @@ AgentsSource::AgentsSource(
 {
     _remainingAgents = _chunkAgents;
     _agentsGenerated = 0;
-    _boundaries      = boundaries;
-    _lifeSpan        = lifeSpan;
-    _agents.clear();
+    _boundaries      = std::move(boundaries);
+    _lifeSpan        = std::move(lifeSpan);
 }
-
-AgentsSource::~AgentsSource() {}
 
 void AgentsSource::GenerateAgentsAndAddToPool(int count, Building * building)
 {
-    std::vector<Pedestrian *> peds;
-    GenerateAgents(peds, count, building);
+    std::vector<Pedestrian *> peds = GenerateAgents(count, building);
+    ;
+
     _agents.insert(_agents.begin(), peds.begin(), peds.end());
     _agentsGenerated += count;
 }
 
-void AgentsSource::RemoveAgentsFromPool(std::vector<Pedestrian *> & ped, int count)
+void AgentsSource::RemoveAgentsFromPool(std::vector<Pedestrian *> & ped, size_t count)
 {
-    if((int) _agents.size() >= count) {
+    if(_agents.size() >= count) {
         ped.insert(ped.begin(), _agents.begin(), _agents.begin() + count);
         _agents.erase(_agents.begin(), _agents.begin() + count);
     } else {
@@ -95,18 +94,13 @@ void AgentsSource::AddAgentsToPool(std::vector<Pedestrian *> & peds)
     _agents.insert(_agents.begin(), peds.begin(), peds.end());
 }
 
-bool AgentsSource::Greedy() const
+bool AgentsSource::IsGreedy() const
 {
     return _greedy;
 }
-int AgentsSource::GetPoolSize() const
+size_t AgentsSource::GetPoolSize() const
 {
-    return (int) _agents.size();
-}
-
-void AgentsSource::AddToPool(Pedestrian * ped)
-{
-    _agents.push_back(ped);
+    return _agents.size();
 }
 
 int AgentsSource::GetAgentsGenerated() const
@@ -119,14 +113,14 @@ void AgentsSource::SetAgentsGenerated(int agentsGenerated)
     _agentsGenerated = agentsGenerated;
 }
 
-const std::vector<float> AgentsSource::GetBoundaries() const
+std::vector<float> AgentsSource::GetBoundaries() const
 {
     return _boundaries;
 }
 
-void AgentsSource::Setboundaries(std::vector<float> bounds)
+void AgentsSource::SetBoundaries(std::vector<float> bounds)
 {
-    _boundaries = bounds;
+    _boundaries = std::move(bounds);
 }
 
 const std::string & AgentsSource::GetCaption() const
@@ -210,38 +204,39 @@ float AgentsSource::GetStartY() const
 
 void AgentsSource::SetStartDistribution(std::shared_ptr<StartDistribution> startDistribution)
 {
-    _startDistribution = startDistribution;
+    _startDistribution = std::move(startDistribution);
 }
 
-const std::shared_ptr<StartDistribution> AgentsSource::GetStartDistribution() const
+std::shared_ptr<StartDistribution> AgentsSource::GetStartDistribution() const
 {
     return _startDistribution;
 }
 
-void AgentsSource::GenerateAgents(std::vector<Pedestrian *> & peds, int count, Building * building)
+std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * building) const
 {
     std::vector<Point> emptyPositions;
+    std::vector<Pedestrian *> peds;
     // TODO: this vector is empty with purpose!
     //       1. Source-Pedestrians are created without setting their positions.
     //       2. In a second step (in AgentsSourcesManager::ProcessAllSources())
     //          the positions will be calculated and initializes.
     // TODO: We should reverse the order of points 1 and 2.
-    int pid;
-    pid = (this->GetAgentId() >= 0) ?
-              this->GetAgentId() :
-              Pedestrian::GetAgentsCreated() + building->GetAllPedestrians().size();
+    int pid = (this->GetAgentId() >= 0) ?
+                  this->GetAgentId() :
+                  Pedestrian::GetAgentsCreated() + building->GetAllPedestrians().size();
     for(int i = 0; i < count; i++) {
         if(GetStartDistribution()) {
-            auto ped = GetStartDistribution()->GenerateAgent(building, &pid, emptyPositions);
+            auto * ped = GetStartDistribution()->GenerateAgent(building, &pid, emptyPositions);
             peds.push_back(ped);
         } else {
-            std::cout << " \n Source: StartDistribution is null!\n"
-                         " This happens when group_id in <source> does not much any group_id in "
-                         "<agents>\n"
-                         " Check again your inifile. If the problem persists report an issue\n";
-            exit(EXIT_FAILURE);
+            std::string message =
+                "Source: StartDistribution is null!\n"
+                "This happens when group_id in <source> does not much any group_id in <agents>. "
+                "Check your inifile.";
+            throw std::runtime_error(message);
         }
     }
+    return peds;
 }
 
 

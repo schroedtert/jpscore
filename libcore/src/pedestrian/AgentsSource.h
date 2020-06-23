@@ -63,13 +63,7 @@ public:
     /**
       * Destructor
       */
-    virtual ~AgentsSource();
-
-    /**
-      * Add a new agent to this source
-      * @param ped
-      */
-    void AddToPool(Pedestrian * ped);
+    virtual ~AgentsSource() = default;
 
     /**
       * Generate a number of agents, based on the frequency given in the constructor.
@@ -89,14 +83,14 @@ public:
       * @param count: the number of agents to generate
       * @param building: a pointer to the building object
       */
-    void GenerateAgents(std::vector<Pedestrian *> & peds, int count, Building * building);
+    std::vector<Pedestrian *> GenerateAgents(int count, Building * building) const;
 
     /**
       * Generate count agents and save them in the vector
       * @param ped: the container for the agents
       * @param count: the number of agents to generate
       */
-    void RemoveAgentsFromPool(std::vector<Pedestrian *> & peds, int count);
+    void RemoveAgentsFromPool(std::vector<Pedestrian *> & peds, size_t count);
 
     /**
       * Add the agents to the pool. This might be important in the case the removed agents could not
@@ -108,7 +102,7 @@ public:
     /**
       * @return the number of agents remaining
       */
-    int GetPoolSize() const;
+    size_t GetPoolSize() const;
 
     /**
       * Print relevant information
@@ -117,8 +111,8 @@ public:
 
     int GetAgentsGenerated() const;
     void SetAgentsGenerated(int agentsGenerated);
-    const std::vector<float> GetBoundaries() const;
-    void Setboundaries(std::vector<float> bounds);
+    std::vector<float> GetBoundaries() const;
+    void SetBoundaries(std::vector<float> bounds);
     const std::string & GetCaption() const;
     int GetFrequency() const;
     int GetGroupId() const;
@@ -135,9 +129,9 @@ public:
     float GetPercent() const;
     float GetRate() const;
     std::vector<int> GetLifeSpan() const;
-    bool Greedy() const;
+    bool IsGreedy() const;
     void SetStartDistribution(std::shared_ptr<StartDistribution>);
-    const std::shared_ptr<StartDistribution> GetStartDistribution() const;
+    std::shared_ptr<StartDistribution> GetStartDistribution() const;
 
 private:
     int _id              = -1;

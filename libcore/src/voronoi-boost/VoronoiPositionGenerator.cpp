@@ -172,7 +172,7 @@ bool ComputeBestPositionVoronoiBoost(
 #endif
             voronoi_diagram<double>::const_vertex_iterator chosen_it = vd.vertices().begin();
             double dis                                               = 0;
-            if(!src->Greedy())
+            if(!src->IsGreedy())
                 VoronoiBestVertexRandMax(
                     src, discrete_positions, vd, subroom, factor, chosen_it, dis, radius);
             else

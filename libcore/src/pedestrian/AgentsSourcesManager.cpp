@@ -58,37 +58,44 @@ bool AgentsSourcesManager::ProcessAllSources() const
 {
     bool empty          = true;
     double current_time = Pedestrian::GetGlobalTime();
-    std::vector<Pedestrian *>
-        source_peds; // we have to collect peds from all sources, so that we can consider them  while computing new positions
+
+    // we have to collect peds from all sources, so that we can consider them  while computing new positions
+    std::vector<Pedestrian *> source_peds;
     for(const auto & src : _sources) {
         auto srcLifeSpan = src->GetLifeSpan();
-        bool inTime      = (current_time >= srcLifeSpan[0]) && (current_time <= srcLifeSpan[1]);
+
         // inTime is always true if src got some PlanTime (default values
         // if src has no PlanTime, then this is set to 0. In this case inTime
         // is important in the following condition
-        bool frequencyTime = std::fmod(current_time - srcLifeSpan[0], src->GetFrequency()) ==
-                             0; // time of creation wrt frequency
+        bool inTime = (current_time >= srcLifeSpan[0]) && (current_time <= srcLifeSpan[1]);
+
+        // time of creation wrt frequency
+        bool frequencyTime = std::fmod(current_time - srcLifeSpan[0], src->GetFrequency()) == 0;
+
         bool newCycle = almostEqual(current_time, srcLifeSpan[0], 1.e-5) || frequencyTime;
-        bool subCycle;
-        int quotient      = (int) (current_time - srcLifeSpan[0]) / (int) src->GetFrequency();
+
+        int quotient = static_cast<int>(current_time - srcLifeSpan[0]) / src->GetFrequency();
+
         int timeReference = src->GetFrequency() * quotient;
-        subCycle =
+
+        bool subCycle =
             (current_time > srcLifeSpan[0]) ?
                 std::fmod(current_time - timeReference - srcLifeSpan[0], src->GetRate()) == 0 :
                 false;
 
-        if(newCycle)
+        if(newCycle) {
             src->ResetRemainingAgents();
+        }
 
         bool timeToCreate = newCycle || subCycle;
         LOG_DEBUG(
-            "timeToCreate: {} pool size: {} plan time < current time: {} inTime: {} "
+            "timeToCreate: {} plan time < current time: {} inTime: {} "
             "remainingAgents: {}",
             timeToCreate,
-            src->GetPoolSize(),
             (src->GetPlanTime() <= current_time),
             inTime,
             src->GetRemainingAgents());
+
         if(timeToCreate && src->GetPoolSize() && (src->GetPlanTime() <= current_time) && inTime &&
            src->GetRemainingAgents()) // maybe diff<eps
         {
