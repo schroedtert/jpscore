@@ -287,11 +287,11 @@ std::shared_ptr<AgentsSource> PedDistributionParser::parseSourceNode(TiXmlElemen
     if(rate < 0) {
         rate = frequency;
     }
-    auto source = std::shared_ptr<AgentsSource>(new AgentsSource(
+    auto source = std::make_shared<AgentsSource>(
         id,
         caption,
         agents_max,
-        group_id,
+        std::vector<int>{group_id},
         frequency,
         greedy,
         time,
@@ -302,7 +302,7 @@ std::shared_ptr<AgentsSource> PedDistributionParser::parseSourceNode(TiXmlElemen
         rate,
         chunkAgents,
         boundaries,
-        lifeSpan));
+        lifeSpan);
 
     LOG_INFO("Source with id {} will be parsed (greedy = {}).", id, greedy);
     return source;

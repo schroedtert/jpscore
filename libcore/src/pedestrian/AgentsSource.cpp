@@ -36,14 +36,14 @@
 AgentsSource::AgentsSource(
     int id,
     std::string caption,
-    int max_agents,
-    int group_id,
+    int maxAgents,
+    std::vector<int> groupIDs,
     int frequency,
     bool greedy,
     double time,
-    int agent_id,
-    float startx,
-    float starty,
+    int agentID,
+    float startX,
+    float startY,
     float percent,
     float rate,
     int chunkAgents,
@@ -51,14 +51,14 @@ AgentsSource::AgentsSource(
     std::vector<int> lifeSpan) :
     _id(id),
     _frequency(frequency),
-    _maxAgents(max_agents),
-    _groupID(group_id),
+    _maxAgents(maxAgents),
+    _groupIDs(groupIDs),
     _caption(std::move(caption)),
     _greedy(greedy),
-    _agent_id(agent_id),
+    _agentID(agentID),
     _time(time),
-    _startx(startx),
-    _starty(starty),
+    _startX(startX),
+    _startY(startY),
     _chunkAgents(chunkAgents),
     _percent(percent),
     _rate(rate)
@@ -135,17 +135,18 @@ int AgentsSource::GetFrequency() const
 
 int AgentsSource::GetGroupId() const
 {
-    return _groupID;
+    //TODO
+    return -1;
 }
 
-int AgentsSource::GetId() const
+int AgentsSource::GetID() const
 {
     return _id;
 }
 
-int AgentsSource::GetAgentId() const
+int AgentsSource::GetAgentID() const
 {
-    return _agent_id;
+    return _agentID;
 }
 
 double AgentsSource::GetPlanTime() const
@@ -193,12 +194,12 @@ std::vector<int> AgentsSource::GetLifeSpan() const
 
 float AgentsSource::GetStartX() const
 {
-    return _startx;
+    return _startX;
 }
 
 float AgentsSource::GetStartY() const
 {
-    return _starty;
+    return _startY;
 }
 
 
@@ -221,8 +222,8 @@ std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * bui
     //       2. In a second step (in AgentsSourcesManager::ProcessAllSources())
     //          the positions will be calculated and initializes.
     // TODO: We should reverse the order of points 1 and 2.
-    int pid = (this->GetAgentId() >= 0) ?
-                  this->GetAgentId() :
+    int pid = (this->GetAgentID() >= 0) ?
+                  this->GetAgentID() :
                   Pedestrian::GetAgentsCreated() + building->GetAllPedestrians().size();
     for(int i = 0; i < count; i++) {
         if(GetStartDistribution()) {
@@ -242,30 +243,30 @@ std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * bui
 
 void AgentsSource::Dump() const
 {
-    auto tmpB = this->GetBoundaries();
-    auto tmpL = this->GetLifeSpan();
-    LOG_DEBUG(
-        "Dumping Source: Caption={} SourceID={:d}, GroupID={:d}, Frequency={:d}, AgentsMax={:d}, "
-        "AgentsPool={:d}, AgentID={:d}, Time={:.2f}, Pos=({:.2f},{:.2f}), Percent={:.2f}, "
-        "Rate={:.2f}, N_create={:d}, Boundaries=(XAxis=({:.4f}, {:.4f}), YAxis=({:.4f},{:.4f})), "
-        "LifeSpan=({:d},{:d})",
-        this->GetCaption(),
-        _id,
-        _groupID,
-        _frequency,
-        _maxAgents,
-        _agents.size(),
-        this->GetAgentId(),
-        this->GetPlanTime(),
-        this->GetStartX(),
-        this->GetStartY(),
-        this->GetPercent(),
-        this->GetRate(),
-        this->GetChunkAgents(),
-        tmpB[0],
-        tmpB[1],
-        tmpB[2],
-        tmpB[3],
-        tmpL[0],
-        tmpL[1]);
+    //    auto tmpB = this->GetBoundaries();
+    //    auto tmpL = this->GetLifeSpan();
+    //    LOG_DEBUG(
+    //        "Dumping Source: Caption={} SourceID={:d}, GroupID={:d}, Frequency={:d}, AgentsMax={:d}, "
+    //        "AgentsPool={:d}, AgentID={:d}, Time={:.2f}, Pos=({:.2f},{:.2f}), Percent={:.2f}, "
+    //        "Rate={:.2f}, N_create={:d}, Boundaries=(XAxis=({:.4f}, {:.4f}), YAxis=({:.4f},{:.4f})), "
+    //        "LifeSpan=({:d},{:d})",
+    //        this->GetCaption(),
+    //        _id,
+    //        _groupIDs,
+    //        _frequency,
+    //        _maxAgents,
+    //        _agents.size(),
+    //        this->GetAgentID(),
+    //        this->GetPlanTime(),
+    //        this->GetStartX(),
+    //        this->GetStartY(),
+    //        this->GetPercent(),
+    //        this->GetRate(),
+    //        this->GetChunkAgents(),
+    //        tmpB[0],
+    //        tmpB[1],
+    //        tmpB[2],
+    //        tmpB[3],
+    //        tmpL[0],
+    //        tmpL[1]);
 }

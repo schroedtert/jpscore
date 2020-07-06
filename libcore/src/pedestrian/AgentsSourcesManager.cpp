@@ -105,7 +105,7 @@ bool AgentsSourcesManager::ProcessAllSources() const
             source_peds.reserve(source_peds.size() + peds.size());
             LOG_INFO(
                 "Source {:d} generating {:d} agents at {:3.3f}s, {:d} ({:d} remaining in pool)",
-                src->GetId(),
+                src->GetID(),
                 peds.size(),
                 current_time,
                 src->GetRemainingAgents(),
@@ -238,7 +238,7 @@ void AgentsSourcesManager::AdjustVelocityUsingWeidmann(Pedestrian * ped) const
 void AgentsSourcesManager::GenerateAgents()
 {
     for(const auto & src : _sources) {
-        LOG_INFO("Generate src: {}", src->GetId());
+        LOG_INFO("Generate src: {}", src->GetID());
         src->GenerateAgentsAndAddToPool(src->GetMaxAgents(), _building);
     }
 }

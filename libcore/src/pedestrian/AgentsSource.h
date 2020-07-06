@@ -46,14 +46,14 @@ public:
     AgentsSource(
         int id,
         std::string caption,
-        int max_agents,
-        int group_id,
+        int maxAgents,
+        std::vector<int> groupIDs,
         int frequency,
         bool greedy,
         double time,
-        int agent_id,
-        float startx,
-        float starty,
+        int agentID,
+        float startX,
+        float startY,
         float percent,
         float rate,
         int chunkAgents,
@@ -116,8 +116,8 @@ public:
     const std::string & GetCaption() const;
     int GetFrequency() const;
     int GetGroupId() const;
-    int GetId() const;
-    int GetAgentId() const;
+    int GetID() const;
+    int GetAgentID() const;
     float GetStartX() const;
     float GetStartY() const;
     double GetPlanTime() const;
@@ -134,18 +134,18 @@ public:
     std::shared_ptr<StartDistribution> GetStartDistribution() const;
 
 private:
-    int _id              = -1;
-    int _frequency       = 1; /// create \var _chunkAgents every \var _frequency seconds
-    int _maxAgents       = 0;
-    int _groupID         = -1;
+    int _id        = -1;
+    int _frequency = 1; /// create \var _chunkAgents every \var _frequency seconds
+    int _maxAgents = 0;
+    std::vector<int> _groupIDs;
     std::string _caption = "no caption";
     bool _greedy         = false;
     int _agentsGenerated = 0;
     std::vector<float> _boundaries;
-    int _agent_id;
+    int _agentID;
     double _time;  /// planned generation time. here \var _maxAgents = 1
-    float _startx; /// \var _maxAgents = 1
-    float _starty; /// \var _maxAgents = 1
+    float _startX; /// \var _maxAgents = 1
+    float _startY; /// \var _maxAgents = 1
     std::vector<int> _lifeSpan;
 
     int _chunkAgents;     /// generate \var chunk_agents per \var frequency seconds

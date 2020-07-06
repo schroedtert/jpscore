@@ -625,8 +625,8 @@ void PedDistributor::DistributeInSubRoom(
 {
     std::vector<int> reserved_ids;
     for(const auto & source : _start_dis_sources) {
-        if(source->GetAgentId() >= 0)
-            reserved_ids.push_back(source->GetAgentId());
+        if(source->GetAgentID() >= 0)
+            reserved_ids.push_back(source->GetAgentID());
     }
 
     // set the pedestrians
