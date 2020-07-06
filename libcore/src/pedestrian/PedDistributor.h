@@ -42,7 +42,6 @@ class PedDistributor
 private:
     std::vector<std::shared_ptr<StartDistribution>> _start_dis;     // ID startraum, subroom und Anz
     std::vector<std::shared_ptr<StartDistribution>> _start_dis_sub; // ID startraum, subroom und Anz
-    std::vector<std::shared_ptr<AgentsSource>> _start_dis_sources;  // contain the sources
 
     std::vector<Point> PositionsOnFixX(
         double max_x,
@@ -98,12 +97,6 @@ public:
      * @return true if everything went fine
      */
     bool Distribute(Building * building) const;
-
-    /**
-     * provided for convenience
-     */
-
-    const std::vector<std::shared_ptr<AgentsSource>> & GetAgentsSources() const;
 
     /**
      * Get positions from filename

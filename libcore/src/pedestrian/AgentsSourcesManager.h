@@ -59,12 +59,12 @@ public:
     /**
       *  Add a new agent source
       */
-    void AddSource(std::shared_ptr<AgentsSource> src);
+    void AddSource(AgentsSource src);
 
     /**
       * @return all sources
       */
-    const std::vector<std::shared_ptr<AgentsSource>> & GetSources() const;
+    const std::vector<AgentsSource> & GetSources() const;
 
     /**
       * Set the building object
@@ -94,7 +94,7 @@ public:
       *Schedule the pedestrians for the simulation
       * @return true if all source are empty
       */
-    bool ProcessAllSources() const;
+    bool ProcessAllSources();
 
     /**
       * Trigger the sources to generate the specified
@@ -160,7 +160,7 @@ private:
 
 private:
     /// contain the sources
-    std::vector<std::shared_ptr<AgentsSource>> _sources;
+    std::vector<AgentsSource> _sources;
     ///to control the trigger of the events
     long int _lastUpdateTime = 0;
     int maxSimTime           = 0;

@@ -28,6 +28,7 @@
  **/
 #pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,6 +37,11 @@ class Pedestrian;
 class OutputHandler;
 class StartDistribution;
 class Building;
+
+struct AgentGroupSourceInfo {
+    int groupID;
+    int numAgents;
+};
 
 class AgentsSource
 {
@@ -46,8 +52,10 @@ public:
     AgentsSource(
         int id,
         std::string caption,
+        int roomID,
+        int subRoomID,
         int maxAgents,
-        std::vector<int> groupIDs,
+        std::vector<AgentGroupSourceInfo> groupInfo,
         int frequency,
         bool greedy,
         double time,
@@ -130,14 +138,20 @@ public:
     float GetRate() const;
     std::vector<int> GetLifeSpan() const;
     bool IsGreedy() const;
-    void SetStartDistribution(std::shared_ptr<StartDistribution>);
-    std::shared_ptr<StartDistribution> GetStartDistribution() const;
+
+    void AddStartDistribution(int groupID, std::shared_ptr<StartDistribution>);
+    std::shared_ptr<StartDistribution> GetStartDistribution(int groupID) const;
+    int GetRoomID() const;
+    int GetSubRoomID() const;
 
 private:
     int _id        = -1;
     int _frequency = 1; /// create \var _chunkAgents every \var _frequency seconds
     int _maxAgents = 0;
-    std::vector<int> _groupIDs;
+    int _roomID    = -1;
+    int _subRoomID = -1;
+    std::vector<AgentGroupSourceInfo> _groupInfo;
+
     std::string _caption = "no caption";
     bool _greedy         = false;
     int _agentsGenerated = 0;
@@ -156,5 +170,5 @@ private:
     float _rate    = 1.0;
 
     std::vector<Pedestrian *> _agents;
-    std::shared_ptr<StartDistribution> _startDistribution;
+    std::map<int, std::shared_ptr<StartDistribution>> _startDistributions;
 };

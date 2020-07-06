@@ -75,9 +75,8 @@ bool ComputeBestPositionVoronoiBoost(
     std::vector<Pedestrian *> & peds_queue)
 {
     bool return_value = true;
-    auto dist         = src->GetStartDistribution();
-    int roomID        = dist->GetRoomId();
-    int subroomID     = dist->GetSubroomID();
+    int roomID        = src->GetRoomID();
+    int subroomID     = src->GetSubRoomID();
 
     std::vector<Pedestrian *> existing_peds;
     std::vector<Pedestrian *> peds_without_place;

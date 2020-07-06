@@ -37,7 +37,8 @@ set(source_files
     src/IO/IniFileParser.cpp
     src/IO/OutputHandler.cpp
     src/IO/PedDistributionParser.cpp
-    src/IO/TrainFileParser.cpp
+        src/IO/SourceParser.cpp
+        src/IO/TrainFileParser.cpp
     src/IO/Trajectories.cpp
     src/JPSfire/A_smoke_sensor/SmokeSensor.cpp
     src/JPSfire/B_walking_speed/WalkingSpeed.cpp
@@ -127,8 +128,9 @@ set(header_files
     src/IO/GeoFileParser.h
     src/IO/IniFileParser.h
     src/IO/OutputHandler.h
-    src/IO/PedDistributionParser.h
-    src/IO/TrainFileParser.h
+        src/IO/PedDistributionParser.h
+        src/IO/SourceParser.h
+        src/IO/TrainFileParser.h
     src/IO/Trajectories.h
     src/JPSfire/A_smoke_sensor/SmokeSensor.h
     src/JPSfire/B_walking_speed/WalkingSpeed.h

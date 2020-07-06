@@ -36,8 +36,10 @@
 AgentsSource::AgentsSource(
     int id,
     std::string caption,
+    int roomID,
+    int subRoomID,
     int maxAgents,
-    std::vector<int> groupIDs,
+    std::vector<AgentGroupSourceInfo> groupInfo,
     int frequency,
     bool greedy,
     double time,
@@ -50,9 +52,11 @@ AgentsSource::AgentsSource(
     std::vector<float> boundaries,
     std::vector<int> lifeSpan) :
     _id(id),
+    _roomID(roomID),
+    _subRoomID(subRoomID),
     _frequency(frequency),
     _maxAgents(maxAgents),
-    _groupIDs(groupIDs),
+    _groupInfo(groupInfo),
     _caption(std::move(caption)),
     _greedy(greedy),
     _agentID(agentID),
@@ -68,11 +72,18 @@ AgentsSource::AgentsSource(
     _boundaries      = std::move(boundaries);
     _lifeSpan        = std::move(lifeSpan);
 }
+int AgentsSource::GetRoomID() const
+{
+    return _roomID;
+}
+int AgentsSource::GetSubRoomID() const
+{
+    return _subRoomID;
+}
 
 void AgentsSource::GenerateAgentsAndAddToPool(int count, Building * building)
 {
     std::vector<Pedestrian *> peds = GenerateAgents(count, building);
-    ;
 
     _agents.insert(_agents.begin(), peds.begin(), peds.end());
     _agentsGenerated += count;
@@ -202,15 +213,16 @@ float AgentsSource::GetStartY() const
     return _startY;
 }
 
-
-void AgentsSource::SetStartDistribution(std::shared_ptr<StartDistribution> startDistribution)
+void AgentsSource::AddStartDistribution(
+    int groupID,
+    std::shared_ptr<StartDistribution> startDistribution)
 {
-    _startDistribution = std::move(startDistribution);
+    _startDistributions.emplace(groupID, std::move(startDistribution));
 }
 
-std::shared_ptr<StartDistribution> AgentsSource::GetStartDistribution() const
+std::shared_ptr<StartDistribution> AgentsSource::GetStartDistribution(int groupID) const
 {
-    return _startDistribution;
+    return _startDistributions.at(groupID);
 }
 
 std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * building) const
@@ -225,18 +237,24 @@ std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * bui
     int pid = (this->GetAgentID() >= 0) ?
                   this->GetAgentID() :
                   Pedestrian::GetAgentsCreated() + building->GetAllPedestrians().size();
-    for(int i = 0; i < count; i++) {
-        if(GetStartDistribution()) {
-            auto * ped = GetStartDistribution()->GenerateAgent(building, &pid, emptyPositions);
-            peds.push_back(ped);
-        } else {
-            std::string message =
-                "Source: StartDistribution is null!\n"
-                "This happens when group_id in <source> does not much any group_id in <agents>. "
-                "Check your inifile.";
-            throw std::runtime_error(message);
-        }
+
+    for(auto groupInfo : _groupInfo) {
+        //        for (int i=0; i<groupInfo.numAgents; ++i){
+        //            auto * ped =
+        //        }
     }
+    //    for(int i = 0; i < count; i++) {
+    //        if(GetStartDistribution()) {
+    //            auto * ped = GetStartDistribution()->GenerateAgent(building, &pid, emptyPositions);
+    //            peds.push_back(ped);
+    //        } else {
+    //            std::string message =
+    //                "Source: StartDistribution is null!\n"
+    //                "This happens when group_id in <source> does not much any group_id in <agents>. "
+    //                "Check your inifile.";
+    //            throw std::runtime_error(message);
+    //        }
+    //    }
     return peds;
 }
 

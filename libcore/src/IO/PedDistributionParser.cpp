@@ -35,8 +35,7 @@ PedDistributionParser::~PedDistributionParser() {}
 
 bool PedDistributionParser::LoadPedDistribution(
     std::vector<std::shared_ptr<StartDistribution>> & startDis,
-    std::vector<std::shared_ptr<StartDistribution>> & startDisSub,
-    std::vector<std::shared_ptr<AgentsSource>> & startDisSources)
+    std::vector<std::shared_ptr<StartDistribution>> & startDisSub)
 {
     LOG_INFO("Loading and parsing the persons attributes");
 
@@ -165,55 +164,6 @@ bool PedDistributionParser::LoadPedDistribution(
         }
     }
 
-    //Parse the sources
-    TiXmlNode * xSources = xRootNode->FirstChild("agents_sources");
-    if(xSources) {
-        LOG_INFO("Loading sources");
-        // ------ parse sources from inifile
-        for(TiXmlElement * e = xSources->FirstChildElement("source"); e;
-            e                = e->NextSiblingElement("source")) {
-            startDisSources.push_back(parseSourceNode(e));
-        } //for
-        TiXmlNode * xFileNode = xSources->FirstChild("file");
-        //------- parse sources from external file
-        if(xFileNode) {
-            fs::path p(_configuration->GetProjectRootDir());
-            std::string sourceFilename = xFileNode->FirstChild()->ValueStr();
-            p /= sourceFilename;
-            sourceFilename = p.string();
-            LOG_INFO("Source file found <{}>", sourceFilename);
-            TiXmlDocument docSource(sourceFilename);
-            if(!docSource.LoadFile()) {
-                LOG_ERROR("Could not parse the sources file.");
-                LOG_ERROR("{}", docSource.ErrorDesc());
-                return false;
-            }
-            TiXmlElement * xRootNodeSource = docSource.RootElement();
-            if(!xRootNodeSource) {
-                LOG_ERROR("Root element does not exist in source file.");
-                return false;
-            }
-
-            if(xRootNodeSource->ValueStr() != "JPScore") {
-                LOG_ERROR("Root element value in source file is not 'JPScore'.");
-                return false;
-            }
-            TiXmlNode * xSourceF = xRootNodeSource->FirstChild("agents_sources");
-            if(!xSourceF) {
-                LOG_ERROR("No agents_sources tag in file not found.");
-                return false;
-            }
-            LOG_INFO("Loading sources from file");
-            TiXmlNode * xSourceNodeF = xSourceF->FirstChild("source");
-            if(xSourceNodeF) {
-                for(TiXmlElement * e = xSourceF->FirstChildElement("source"); e;
-                    e                = e->NextSiblingElement("source")) {
-                    startDisSources.push_back(parseSourceNode(e));
-                } //for
-            } else
-                LOG_INFO("No source info found in source file");
-        } // source file found
-    }     //sources
 
     LOG_INFO("Done loading pedestrian distribution.");
     return true;
@@ -241,6 +191,9 @@ std::shared_ptr<AgentsSource> PedDistributionParser::parseSourceNode(TiXmlElemen
     float chunkAgents = xmltof(e->Attribute("N_create"), 1);
     int timeMin       = xmltof(e->Attribute("time_min"), std::numeric_limits<int>::min());
     int timeMax       = xmltof(e->Attribute("time_max"), std::numeric_limits<int>::max());
+    int roomID        = xmltof(e->Attribute("room_id"), std::numeric_limits<int>::min());
+    int subroomID     = xmltof(e->Attribute("subroom_id"), std::numeric_limits<int>::max());
+
     std::vector<float> boundaries = {xmin, xmax, ymin, ymax};
     std::vector<int> lifeSpan     = {timeMin, timeMax};
     float SizeBB                  = 1;
@@ -290,8 +243,10 @@ std::shared_ptr<AgentsSource> PedDistributionParser::parseSourceNode(TiXmlElemen
     auto source = std::make_shared<AgentsSource>(
         id,
         caption,
+        roomID,
+        subroomID,
         agents_max,
-        std::vector<int>{group_id},
+        std::vector<AgentGroupSourceInfo>{AgentGroupSourceInfo{group_id, agents_max}},
         frequency,
         greedy,
         time,

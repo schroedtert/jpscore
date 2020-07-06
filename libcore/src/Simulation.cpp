@@ -31,6 +31,7 @@
 #include "Simulation.h"
 
 #include "IO/EventFileParser.h"
+#include "IO/SourceParser.h"
 #include "IO/TrainFileParser.h"
 #include "IO/Trajectories.h"
 #include "SimulationHelper.h"
@@ -109,14 +110,13 @@ bool Simulation::InitArgs()
     _building = std::make_shared<Building>(_config, *distributor);
 
     // Initialize the agents sources that have been collected in the pedestrians distributor
+
+    SourceParser::ParseSources(_agentSrcManager, _building.get(), _config->GetProjectFile());
     _agentSrcManager.SetBuilding(_building.get());
     _agentSrcManager.SetMaxSimTime(GetMaxSimTime());
-    _gotSources =
-        !distributor->GetAgentsSources().empty(); // did we have any sources? false if no sources
-
-    for(const auto & src : distributor->GetAgentsSources()) {
-        _agentSrcManager.AddSource(src);
-        src->Dump();
+    for(const auto & src : _agentSrcManager.GetSources()) {
+        LOG_INFO("{}", src.GetCaption());
+        src.Dump();
     }
 
     //perform customs initialisation, like computing the phi for the gcfm

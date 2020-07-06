@@ -44,23 +44,19 @@ PedDistributor::PedDistributor(const Configuration * configuration) : _configura
 {
     _start_dis         = std::vector<std::shared_ptr<StartDistribution>>();
     _start_dis_sub     = std::vector<std::shared_ptr<StartDistribution>>();
-    _start_dis_sources = std::vector<std::shared_ptr<AgentsSource>>();
+    //    _start_dis_sources = std::vector<std::shared_ptr<AgentsSource>>();
     PedDistributionLoader * parser;
     {
         parser = new PedDistributionParser(_configuration);
     }
 
-    parser->LoadPedDistribution(_start_dis, _start_dis_sub, _start_dis_sources);
+    parser->LoadPedDistribution(_start_dis, _start_dis_sub);
     delete parser;
 }
 
 
 PedDistributor::~PedDistributor() {}
 
-const std::vector<std::shared_ptr<AgentsSource>> & PedDistributor::GetAgentsSources() const
-{
-    return _start_dis_sources;
-}
 
 bool PedDistributor::Distribute(Building * building) const
 {
@@ -288,22 +284,6 @@ bool PedDistributor::Distribute(Building * building) const
             }
         }
         nPeds_is += N;
-    }
-
-    //now populate the sources
-    std::vector<Point> emptyPositions;
-    for(const auto & source : _start_dis_sources) {
-        for(const auto & dist : _start_dis_sub) {
-            if(source->GetGroupId() == dist->GetGroupId()) {
-                source->SetStartDistribution(dist);
-            }
-        }
-
-        for(const auto & dist : _start_dis) {
-            if(source->GetGroupId() == dist->GetGroupId()) {
-                source->SetStartDistribution(dist);
-            }
-        }
     }
 
     if(nPeds_is != nPeds_expected) {
@@ -624,10 +604,10 @@ void PedDistributor::DistributeInSubRoom(
     Building * building) const
 {
     std::vector<int> reserved_ids;
-    for(const auto & source : _start_dis_sources) {
-        if(source->GetAgentID() >= 0)
-            reserved_ids.push_back(source->GetAgentID());
-    }
+    //    for(const auto & source : _start_dis_sources) {
+    //        if(source->GetAgentID() >= 0)
+    //            reserved_ids.push_back(source->GetAgentID());
+    //    }
 
     // set the pedestrians
     for(int i = 0; i < nAgents; ++i) {
