@@ -64,7 +64,7 @@ private:
     /// writing the trajectories to file
     std::unique_ptr<Trajectories> _iod;
     std::unique_ptr<EventManager> _em;
-    AgentsSourcesManager _agentSrcManager;
+    std::unique_ptr<AgentsSourcesManager> _agentSrcManager;
     int _periodic;
     int _maxSimTime;
     /// Will be set if pedestrian sources exist
@@ -75,6 +75,7 @@ private:
     int _countTraj = 0; // count number of TXT trajectories to produce
 
     std::vector<Pedestrian *> _pedsToRemove;
+    std::unique_ptr<PedDistributor> _distributor;
 
 public:
     /**

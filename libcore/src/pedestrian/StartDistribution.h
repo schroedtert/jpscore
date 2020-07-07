@@ -85,7 +85,7 @@ private:
 public:
     StartDistribution(int seed);
     virtual ~StartDistribution();
-    std::default_random_engine GetGenerator();
+    std::default_random_engine GetGenerator() const;
     int GetAgentsNumber() const;
     void SetRoomID(int id);
     void SetAgentsNumber(int N);
@@ -115,11 +115,12 @@ public:
     void InitPremovementTime(double mean, double stdv);
     double GetPremovementTime() const;
     void InitRiskTolerance(std::string distribution_type, double para1, double para2);
-    double GetRiskTolerance();
+    double GetRiskTolerance() const;
     void SetPositionsDir(const std::string & dir);
     const std::string & GetPositionsDir() const;
     void SetUnitTraj(const std::string & unit);
     const std::string & GetUnitTraj() const;
 
-    Pedestrian * GenerateAgent(Building * building, int * pid, std::vector<Point> & positions);
+    Pedestrian *
+    GenerateAgent(Building * building, int * pid, std::vector<Point> & positions) const;
 };

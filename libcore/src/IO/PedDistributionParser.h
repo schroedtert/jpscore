@@ -20,6 +20,7 @@
 //
 #pragma once
 
+#include "pedestrian/AgentsSource.h"
 #include "pedestrian/PedDistributionLoader.h"
 
 #include <tinyxml.h>
@@ -32,8 +33,8 @@ public:
     PedDistributionParser(const Configuration * configuration);
     ~PedDistributionParser();
     virtual bool LoadPedDistribution(
-        std::vector<std::shared_ptr<StartDistribution>> & startDis,
-        std::vector<std::shared_ptr<StartDistribution>> & startDisSub) override;
+        std::vector<StartDistribution> & startDis,
+        std::vector<StartDistribution> & startDisSub) override;
     std::shared_ptr<AgentsSource> parseSourceNode(TiXmlElement * e);
 
 

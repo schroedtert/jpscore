@@ -28,6 +28,8 @@
  **/
 #pragma once
 
+#include "pedestrian/PedDistributor.h"
+
 #include <map>
 #include <memory>
 #include <string>
@@ -40,6 +42,7 @@ class Building;
 
 struct AgentGroupSourceInfo {
     int groupID;
+    int agentParameterID;
     int numAgents;
 };
 
@@ -79,7 +82,8 @@ public:
       * @see _maxAgents
       * @param ped
       */
-    void GenerateAgentsAndAddToPool(int count, Building * building);
+    void
+    GenerateAgentsAndAddToPool(int count, Building * building, const PedDistributor & distributor);
 
     /**
       * Generate agents, but do not add them to the pool.
@@ -91,7 +95,8 @@ public:
       * @param count: the number of agents to generate
       * @param building: a pointer to the building object
       */
-    std::vector<Pedestrian *> GenerateAgents(int count, Building * building) const;
+    std::vector<Pedestrian *>
+    GenerateAgents(int count, Building * building, const PedDistributor & distributor) const;
 
     /**
       * Generate count agents and save them in the vector

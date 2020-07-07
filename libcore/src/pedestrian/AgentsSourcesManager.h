@@ -28,6 +28,8 @@
  **/
 #pragma once
 
+#include "pedestrian/PedDistributor.h"
+
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -44,12 +46,12 @@ public:
     /**
       * Constructor
       */
-    AgentsSourcesManager();
+    AgentsSourcesManager(const PedDistributor & distributor);
 
-    /**
-      * disable copying
-      */
-    AgentsSourcesManager(const AgentsSourcesManager &) = delete;
+    //    /**
+    //      * disable copying
+    //      */
+    //    AgentsSourcesManager(const AgentsSourcesManager &) = delete;
 
     /**
       * Destructor
@@ -100,7 +102,7 @@ public:
       * Trigger the sources to generate the specified
       * number of agents for this frequency
       */
-    void GenerateAgents();
+    void GenerateAgents(const PedDistributor & distributor);
 
     /**
       * Return the total number of agents that will be generated.
@@ -161,6 +163,8 @@ private:
 private:
     /// contain the sources
     std::vector<AgentsSource> _sources;
+
+
     ///to control the trigger of the events
     long int _lastUpdateTime = 0;
     int maxSimTime           = 0;

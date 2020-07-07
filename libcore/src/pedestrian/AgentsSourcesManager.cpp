@@ -29,6 +29,7 @@
 #include "AgentsSourcesManager.h"
 
 #include "AgentsQueue.h"
+#include "AgentsSource.h"
 #include "Pedestrian.h"
 #include "neighborhood/NeighborhoodSearch.h"
 #include "voronoi-boost/VoronoiPositionGenerator.h"
@@ -38,11 +39,11 @@
 
 bool AgentsSourcesManager::_isCompleted = true;
 
-AgentsSourcesManager::AgentsSourcesManager()
+AgentsSourcesManager::AgentsSourcesManager(const PedDistributor & distributor)
 {
     //Generate all agents required for the complete simulation
     //It might be more efficient to generate at each frequency step
-    GenerateAgents();
+    GenerateAgents(distributor);
     //first call ignoring the return value
     ProcessAllSources();
 
@@ -234,11 +235,11 @@ void AgentsSourcesManager::AdjustVelocityUsingWeidmann(Pedestrian * ped) const
     }
 }
 
-void AgentsSourcesManager::GenerateAgents()
+void AgentsSourcesManager::GenerateAgents(const PedDistributor & distributor)
 {
     for(auto & src : _sources) {
         LOG_INFO("Generate src: {}", src.GetID());
-        src.GenerateAgentsAndAddToPool(src.GetMaxAgents(), _building);
+        src.GenerateAgentsAndAddToPool(src.GetMaxAgents(), _building, distributor);
     }
 }
 

@@ -137,13 +137,14 @@ std::optional<AgentsSource> ParseSource(TiXmlElement * e)
     LOG_INFO("Source with id {} will be parsed (greedy = {}).", id, greedy);
     //    return source;
 
+
     return AgentsSource{
         id,
         caption,
         roomID,
         subroomID,
         agents_max,
-        std::vector<AgentGroupSourceInfo>{AgentGroupSourceInfo{group_id, agents_max}},
+        std::vector<AgentGroupSourceInfo>{AgentGroupSourceInfo{group_id, 1, agents_max}},
         frequency,
         greedy,
         time,

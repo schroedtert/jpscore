@@ -34,8 +34,8 @@ PedDistributionParser::PedDistributionParser(const Configuration * configuration
 PedDistributionParser::~PedDistributionParser() {}
 
 bool PedDistributionParser::LoadPedDistribution(
-    std::vector<std::shared_ptr<StartDistribution>> & startDis,
-    std::vector<std::shared_ptr<StartDistribution>> & startDisSub)
+    std::vector<StartDistribution> & startDis,
+    std::vector<StartDistribution> & startDisSub)
 {
     LOG_INFO("Loading and parsing the persons attributes");
 
@@ -88,23 +88,22 @@ bool PedDistributionParser::LoadPedDistribution(
                 group_id);
             return false;
         }
-        auto dis =
-            std::shared_ptr<StartDistribution>(new StartDistribution(_configuration->GetSeed()));
-        dis->SetRoomID(room_id);
-        dis->SetSubroomID(subroom_id);
-        dis->SetGroupId(group_id);
-        dis->Setbounds(bounds);
-        dis->SetAgentsNumber(number);
-        dis->SetGoalId(goal_id);
-        dis->SetRouteId(route_id);
-        dis->SetRouterId(router_id);
-        dis->SetPatience(patience);
-        dis->InitPremovementTime(premovement_mean, premovement_sigma);
-        dis->SetPositionsDir(positions_dir);
-        dis->SetUnitTraj(unit_traj);
+        StartDistribution dis{static_cast<int>(_configuration->GetSeed())};
+        dis.SetRoomID(room_id);
+        dis.SetSubroomID(subroom_id);
+        dis.SetGroupId(group_id);
+        dis.Setbounds(bounds);
+        dis.SetAgentsNumber(number);
+        dis.SetGoalId(goal_id);
+        dis.SetRouteId(route_id);
+        dis.SetRouterId(router_id);
+        dis.SetPatience(patience);
+        dis.InitPremovementTime(premovement_mean, premovement_sigma);
+        dis.SetPositionsDir(positions_dir);
+        dis.SetUnitTraj(unit_traj);
 
-        if(dis->GetPositionsDir().length()) {
-            LOG_INFO("Positions_dir = <{}>", dis->GetPositionsDir());
+        if(dis.GetPositionsDir().length()) {
+            LOG_INFO("Positions_dir = <{}>", dis.GetPositionsDir());
         }
         if(e->Attribute("risk_tolerance_mean") && e->Attribute("risk_tolerance_sigma")) {
             std::string distribution_type = "normal";
@@ -114,7 +113,7 @@ bool PedDistributionParser::LoadPedDistribution(
                 "Risk tolerance mu = {}, risk tolerance sigma = {}",
                 risk_tolerance_mean,
                 risk_tolerance_sigma);
-            dis->InitRiskTolerance(distribution_type, risk_tolerance_mean, risk_tolerance_sigma);
+            dis.InitRiskTolerance(distribution_type, risk_tolerance_mean, risk_tolerance_sigma);
         } else if(e->Attribute("risk_tolerance_alpha") && e->Attribute("risk_tolerance_beta")) {
             std::string distribution_type = "beta";
             double risk_tolerance_alpha   = xmltof(e->Attribute("risk_tolerance_alpha"), NAN);
@@ -123,7 +122,7 @@ bool PedDistributionParser::LoadPedDistribution(
                 "Risk tolerance alpha = {}, risk tolerance beta = {}",
                 risk_tolerance_alpha,
                 risk_tolerance_beta);
-            dis->InitRiskTolerance(distribution_type, risk_tolerance_alpha, risk_tolerance_beta);
+            dis.InitRiskTolerance(distribution_type, risk_tolerance_alpha, risk_tolerance_beta);
         } else {
             std::string distribution_type = "normal";
             double risk_tolerance_mean    = 0.;
@@ -132,7 +131,7 @@ bool PedDistributionParser::LoadPedDistribution(
                 "Risk tolerance mu = {}, risk tolerance sigma = {}",
                 risk_tolerance_mean,
                 risk_tolerance_sigma);
-            dis->InitRiskTolerance(distribution_type, risk_tolerance_mean, risk_tolerance_sigma);
+            dis.InitRiskTolerance(distribution_type, risk_tolerance_mean, risk_tolerance_sigma);
         }
 
         if(subroom_id == -1) { // no subroom was supplied
@@ -154,13 +153,13 @@ bool PedDistributionParser::LoadPedDistribution(
             exit(EXIT_FAILURE);
             return false;
         }
-        dis->SetGroupParameters(_configuration->GetAgentsParameters().at(agent_para_id).get());
+        dis.SetGroupParameters(_configuration->GetAgentsParameters().at(agent_para_id).get());
 
         if(e->Attribute("startX") && e->Attribute("startY")) {
             double startX = xmltof(e->Attribute("startX"), NAN);
             double startY = xmltof(e->Attribute("startY"), NAN);
             LOG_INFO("startX = {}, startY = {}", startX, startY);
-            dis->SetStartPosition(startX, startY, 0.0);
+            dis.SetStartPosition(startX, startY, 0.0);
         }
     }
 

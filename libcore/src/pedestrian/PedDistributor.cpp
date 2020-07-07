@@ -42,8 +42,6 @@ using namespace boost::lambda;
 
 PedDistributor::PedDistributor(const Configuration * configuration) : _configuration(configuration)
 {
-    _start_dis         = std::vector<std::shared_ptr<StartDistribution>>();
-    _start_dis_sub     = std::vector<std::shared_ptr<StartDistribution>>();
     //    _start_dis_sources = std::vector<std::shared_ptr<AgentsSource>>();
     PedDistributionLoader * parser;
     {
@@ -70,13 +68,13 @@ bool PedDistributor::Distribute(Building * building) const
 
     //collect the available positions for that subroom
     for(const auto & dist : _start_dis_sub) {
-        nPeds_expected += dist->GetAgentsNumber();
-        int roomID = dist->GetRoomId();
+        nPeds_expected += dist.GetAgentsNumber();
+        int roomID = dist.GetRoomId();
         Room * r   = building->GetRoom(roomID);
         if(!r)
             return false;
 
-        int subroomID = dist->GetSubroomID();
+        int subroomID = dist.GetSubroomID();
         SubRoom * sr  = r->GetSubRoom(subroomID);
         if(!sr)
             return false;
@@ -87,9 +85,9 @@ bool PedDistributor::Distribute(Building * building) const
             continue;
         // check if we should read positions from some file
         bool fromDirectory = false;
-        if(dist->GetPositionsDir().length()) {
-            std::string directory = dist->GetPositionsDir();
-            std::string unit      = dist->GetUnitTraj();
+        if(dist.GetPositionsDir().length()) {
+            std::string directory = dist.GetPositionsDir();
+            std::string unit      = dist.GetUnitTraj();
             fs::path the_path(directory);
             if(fs::exists(directory) && fs::is_directory(directory)) {
                 fs::directory_iterator it(the_path), eod;
@@ -98,7 +96,7 @@ bool PedDistributor::Distribute(Building * building) const
                         std::string basename  = p.stem().string(); //
                         std::string extention = p.extension().string();
                         auto tmpPositions =
-                            GetPositionsFromFile(p.string(), dist->GetAgentsNumber(), unit);
+                            GetPositionsFromFile(p.string(), dist.GetAgentsNumber(), unit);
                         //check if positions are
                         //empty. May happen if file
                         //is misformed.
@@ -110,7 +108,7 @@ bool PedDistributor::Distribute(Building * building) const
                         fromDirectory = true;
                         LOG_INFO(
                             "Distributing {:d} pedestrians using file {}{}",
-                            dist->GetAgentsNumber(),
+                            dist.GetAgentsNumber(),
                             basename,
                             extention);
                         break; //leave BOOST_FOREEACH
@@ -129,19 +127,19 @@ bool PedDistributor::Distribute(Building * building) const
             shuffle(
                 possibleSubroomPositions.begin(),
                 possibleSubroomPositions.end(),
-                dist->GetGenerator());
+                dist.GetGenerator());
             allFreePosRoom[subroomID] = possibleSubroomPositions;
         }
     } // for sub_dis
 
     //collect the available positions for that room
     for(const auto & dist : _start_dis) {
-        int roomID = dist->GetRoomId();
+        int roomID = dist.GetRoomId();
         Room * r   = building->GetRoom(roomID);
         if(!r)
             return false;
 
-        nPeds_expected += dist->GetAgentsNumber();
+        nPeds_expected += dist.GetAgentsNumber();
         //compute all subrooms since no specific one is given
         for(const auto & it_sr : r->GetAllSubRooms()) {
             int subroomID         = it_sr.second->GetSubRoomID();
@@ -153,7 +151,7 @@ bool PedDistributor::Distribute(Building * building) const
             shuffle(
                 possibleSubroomPositions.begin(),
                 possibleSubroomPositions.end(),
-                dist->GetGenerator());
+                dist.GetGenerator());
             allFreePosRoom[subroomID] = possibleSubroomPositions;
         }
     }
@@ -162,14 +160,14 @@ bool PedDistributor::Distribute(Building * building) const
     // now proceed to the distribution
     int pid = 1; // the pedID is being increased throughout...
 
-    for(const auto & dist : _start_dis_sub) {
-        int room_id = dist->GetRoomId();
+    for(auto & dist : _start_dis_sub) {
+        int room_id = dist.GetRoomId();
         Room * r    = building->GetRoom(room_id);
         if(!r)
             continue;
         int roomID    = r->GetID();
-        int subroomID = dist->GetSubroomID();
-        int N         = dist->GetAgentsNumber();
+        int subroomID = dist.GetSubroomID();
+        int N         = dist.GetAgentsNumber();
         SubRoom * sr  = r->GetSubRoom(subroomID);
         if(!sr)
             continue;
@@ -200,18 +198,18 @@ bool PedDistributor::Distribute(Building * building) const
             roomID,
             subroomID,
             max_pos);
-        DistributeInSubRoom(N, allpos, &pid, dist.get(), building);
+        DistributeInSubRoom(N, allpos, &pid, &dist, building);
         LOG_INFO("Finished distributing pedestrians");
         nPeds_is += N;
     }
 
     // then continue the distribution according to the rooms
-    for(const auto & dist : _start_dis) {
-        int room_id = dist->GetRoomId();
+    for(StartDistribution dist : _start_dis) {
+        int room_id = dist.GetRoomId();
         Room * r    = building->GetRoom(room_id);
         if(!r)
             continue;
-        int N = dist->GetAgentsNumber();
+        int N = dist.GetAgentsNumber();
         if(N < 0) {
             LOG_ERROR("Negative or null number of pedestrians! Ignoring");
             continue;
@@ -278,9 +276,9 @@ bool PedDistributor::Distribute(Building * building) const
             //workaround, the subroom will be changing at each run.
             //so the last subroom ID is not necessarily the 'real' one
             // might conflicts with sources
-            dist->SetSubroomID(sr->GetSubRoomID());
+            dist.SetSubroomID(sr->GetSubRoomID());
             if(akt_anz[is] > 0) {
-                DistributeInSubRoom(akt_anz[is], allFreePosInRoom[is], &pid, dist.get(), building);
+                DistributeInSubRoom(akt_anz[is], allFreePosInRoom[is], &pid, &dist, building);
             }
         }
         nPeds_is += N;
@@ -600,7 +598,7 @@ void PedDistributor::DistributeInSubRoom(
     int nAgents,
     std::vector<Point> & positions,
     int * pid,
-    StartDistribution * para,
+    const StartDistribution * para,
     Building * building) const
 {
     std::vector<int> reserved_ids;
@@ -620,6 +618,11 @@ void PedDistributor::DistributeInSubRoom(
         building->AddPedestrian(ped);
     }
 }
+
+//const StartDistribution & PedDistributor::GetStartDistribution(int groupID)
+//{
+//    return ;
+//}
 
 double PedDistributor::GetA_dist() const
 {

@@ -27,7 +27,6 @@
 #pragma once
 
 #include "AgentsParameters.h"
-#include "AgentsSource.h"
 #include "StartDistribution.h"
 #include "geometry/Building.h"
 #include "routing/Router.h"
@@ -40,9 +39,6 @@
 class PedDistributor
 {
 private:
-    std::vector<std::shared_ptr<StartDistribution>> _start_dis;     // ID startraum, subroom und Anz
-    std::vector<std::shared_ptr<StartDistribution>> _start_dis_sub; // ID startraum, subroom und Anz
-
     std::vector<Point> PositionsOnFixX(
         double max_x,
         double min_x,
@@ -64,6 +60,8 @@ private:
         double dx) const;
 
     const Configuration * _configuration;
+    std::vector<StartDistribution> _start_dis;     // ID startraum, subroom und Anz
+    std::vector<StartDistribution> _start_dis_sub; // ID startraum, subroom und Anz
 
 public:
     /**
@@ -88,7 +86,7 @@ public:
         int N,
         std::vector<Point> & positions,
         int * pid,
-        StartDistribution * parameters,
+        const StartDistribution * parameters,
         Building * building) const;
 
     /**
@@ -106,6 +104,8 @@ public:
      */
     const std::vector<Point>
     GetPositionsFromFile(std::string filename, int n, std::string unit) const;
+
+    const StartDistribution & GetStartDistribution(int groupID);
 
     double GetA_dist() const;
 

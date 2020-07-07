@@ -9,7 +9,7 @@ class PedDistributionLoader
 {
 public:
     virtual bool LoadPedDistribution(
-        std::vector<std::shared_ptr<StartDistribution>> & startDis,
-        std::vector<std::shared_ptr<StartDistribution>> & startDisSub) = 0;
+        std::vector<StartDistribution> & startDis,
+        std::vector<StartDistribution> & startDisSub) = 0;
     virtual ~PedDistributionLoader(){};
 };

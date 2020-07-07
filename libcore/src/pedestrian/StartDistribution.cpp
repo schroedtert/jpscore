@@ -63,7 +63,7 @@ StartDistribution::StartDistribution(int seed)
 StartDistribution::~StartDistribution() {}
 
 
-std::default_random_engine StartDistribution::GetGenerator()
+std::default_random_engine StartDistribution::GetGenerator() const
 {
     return _generator;
 }
@@ -155,8 +155,10 @@ void StartDistribution::SetAgentsNumber(int N)
 }
 
 
-Pedestrian *
-StartDistribution::GenerateAgent(Building * building, int * pid, std::vector<Point> & positions)
+Pedestrian * StartDistribution::GenerateAgent(
+    Building * building,
+    int * pid,
+    std::vector<Point> & positions) const
 {
     Pedestrian * ped = new Pedestrian();
     // PedIndex
@@ -340,7 +342,7 @@ void StartDistribution::InitRiskTolerance(std::string distribution_type, double 
     }
 }
 
-double StartDistribution::GetRiskTolerance()
+double StartDistribution::GetRiskTolerance() const
 {
     if(_distribution_type == "normal") {
         if(_riskTolerance.stddev() == judge) {

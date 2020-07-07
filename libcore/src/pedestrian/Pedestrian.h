@@ -136,6 +136,11 @@ public:
     Pedestrian();
 
     explicit Pedestrian(const StartDistribution & agentsParameters, Building & building);
+    explicit Pedestrian(
+        int groupID,
+        const AgentsParameters & agentsParameters,
+        Building & building);
+
     virtual ~Pedestrian();
 
     // Setter-Funktionen

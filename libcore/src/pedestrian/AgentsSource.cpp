@@ -81,9 +81,12 @@ int AgentsSource::GetSubRoomID() const
     return _subRoomID;
 }
 
-void AgentsSource::GenerateAgentsAndAddToPool(int count, Building * building)
+void AgentsSource::GenerateAgentsAndAddToPool(
+    int count,
+    Building * building,
+    const PedDistributor & distributor)
 {
-    std::vector<Pedestrian *> peds = GenerateAgents(count, building);
+    std::vector<Pedestrian *> peds = GenerateAgents(count, building, distributor);
 
     _agents.insert(_agents.begin(), peds.begin(), peds.end());
     _agentsGenerated += count;
@@ -225,7 +228,10 @@ std::shared_ptr<StartDistribution> AgentsSource::GetStartDistribution(int groupI
     return _startDistributions.at(groupID);
 }
 
-std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * building) const
+std::vector<Pedestrian *> AgentsSource::GenerateAgents(
+    int count,
+    Building * building,
+    const PedDistributor & distributor) const
 {
     std::vector<Point> emptyPositions;
     std::vector<Pedestrian *> peds;
@@ -239,6 +245,9 @@ std::vector<Pedestrian *> AgentsSource::GenerateAgents(int count, Building * bui
                   Pedestrian::GetAgentsCreated() + building->GetAllPedestrians().size();
 
     for(auto groupInfo : _groupInfo) {
+        auto agentParameter =
+            building->GetConfig()->GetAgentsParameters().at(groupInfo.agentParameterID);
+
         //        for (int i=0; i<groupInfo.numAgents; ++i){
         //            auto * ped =
         //        }

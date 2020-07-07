@@ -159,6 +159,86 @@ Pedestrian::Pedestrian(const StartDistribution & agentsParameters, Building & bu
     _waitingPos = Point(std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
 }
 
+Pedestrian::Pedestrian(int groupID, AgentsParameters & agentsParameters, Building & building) :
+    _group(groupID),
+    _building(&building),
+    _ticksInThisRoom(0),
+
+    _V0UpStairs(agentsParameters.GetV0UpStairs()),
+    _V0DownStairs(agentsParameters.GetV0DownStairs()),
+    _EscalatorUpStairs(agentsParameters.GetEscalatorUpStairs()),
+    _EscalatorDownStairs(agentsParameters.GetEscalatorDownStairs()),
+    _V0IdleEscalatorUpStairs(agentsParameters.GetV0IdleEscalatorUpStairs()),
+    _V0IdleEscalatorDownStairs(agentsParameters.GetV0IdleEscalatorDownStairs())
+
+//    _V0DownStairs              = 0.6;
+//    _EscalatorUpStairs         = 0.8;
+//    _EscalatorDownStairs       = 0.8;
+//    _V0IdleEscalatorUpStairs   = 0.6;
+//    _V0IdleEscalatorDownStairs = 0.6;
+{
+    _id                      = _agentsCreated; //default id
+    _exitIndex               = -1;
+    _group                   = -1;
+    _desiredFinalDestination = FINAL_DEST_OUT;
+    _height                  = 170;
+    _age                     = 30;
+    _premovement             = 0;
+    _riskTolerance           = 0;
+    _gender                  = "female";
+    _mass                    = 1;
+    _tau                     = 0.5;
+    _T                       = 1.0;
+    _deltaT                  = 0.01;
+    _ellipse                 = JEllipse();
+    _roomCaption             = "";
+    _roomID                  = -1;
+    _subRoomID               = -1;
+    _subRoomUID              = -1;
+    _oldRoomID               = std::numeric_limits<int>::min();
+    _oldSubRoomID            = std::numeric_limits<int>::min();
+    _lastE0                  = Point(0, 0);
+    _navLine                 = nullptr;
+    _mentalMap               = std::map<int, int>();
+    _destHistory             = std::vector<int>();
+    _trip                    = std::vector<int>();
+    _lastPosition            = Point(J_NAN, J_NAN);
+    _lastCellPosition        = -1;
+    _knownDoors.clear();
+    _distToBlockade      = 0.0;
+    _reroutingThreshold  = 0.0; // new orientation after 10 seconds, value is incremented
+    _timeBeforeRerouting = 0.0;
+    _timeInJam           = 0.0;
+    _patienceTime        = 5.0; // time after which the ped feels to be in jam
+    _recordingTime       = 20;  //seconds
+    _routingStrategy     = ROUTING_GLOBAL_SHORTEST;
+    _newOrientationDelay = 0; //0 seconds, in steps
+    _updateRate          = _deltaT;
+    _turninAngle         = 0.0;
+    _reroutingEnabled    = false;
+    _tmpFirstOrientation = true;
+    _newOrientationFlag  = false;
+    _router              = nullptr;
+    _building            = nullptr;
+    _spotlight           = false;
+    _ticksInThisRoom     = 0;
+
+    _agentsCreated++; //increase the number of object created
+    _FED_In           = 0.0;
+    _FED_Heat         = 0.0;
+    _WalkingSpeed     = nullptr;
+    _ToxicityAnalysis = nullptr;
+    _waitingPos = Point(std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
+
+    SetV0Norm(
+        agentsParameters.GetV0(),
+        agentsParameters.GetV0UpStairs(),
+        agentsParameters.GetV0DownStairs(),
+        agentsParameters.GetEscalatorUpStairs(),
+        agentsParameters.GetEscalatorDownStairs(),
+        agentsParameters.GetV0IdleEscalatorUpStairs(),
+        agentsParameters.GetV0IdleEscalatorDownStairs());
+}
 
 Pedestrian::~Pedestrian()
 {
