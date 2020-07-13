@@ -353,4 +353,18 @@ CheckOptions:
     value:           ''
   - key:             zircon-temporary-objects.Names
     value:           ''
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.ClassCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.PrivateMemberPrefix
+    value:           _
+  - key:             readability-identifier-naming.StructCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.FunctionCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.VariableCase
+    value:           lowerCase
+  - key:             readability-identifier-naming.GlobalConstantCase
+    value:           UPPER_CASE
 ...
