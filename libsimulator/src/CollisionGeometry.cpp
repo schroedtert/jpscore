@@ -124,6 +124,24 @@ CollisionGeometry::LineSegmentsInDistanceTo(double distance, Point p) const
 bool CollisionGeometry::IntersectsAny(LineSegment linesegment) const
 {
     const auto cellsToQuery = cellsFromLineSegment(linesegment);
+    for(const auto& cell : cellsToQuery) {
+        const auto iter = _grid.find(cell);
+        if(iter == std::end(_grid)) {
+            continue;
+        }
+        if(std::find_if(
+               iter->second.cbegin(), iter->second.cend(), [&linesegment](const auto candidate) {
+                   return intersects(linesegment, candidate);
+               }) != iter->second.end()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CollisionGeometry::IntersectsAnySet(LineSegment linesegment) const
+{
+    const auto cellsToQuery = cellsFromLineSegment(linesegment);
     std::set<LineSegment> segments{};
     for(const auto& cell : cellsToQuery) {
         const auto iter = _grid.find(cell);
