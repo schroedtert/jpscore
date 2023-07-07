@@ -2,8 +2,8 @@
 // Created by tobias on 06.07.23.
 //
 
-#include <benchmark/benchmark.h>
 #include "BenchmarkCollisionGeometry.hpp"
+#include <benchmark/benchmark.h>
 
-//BENCHMARK(bmIntersectsAny);
+// BENCHMARK(bmIntersectsAny);
 BENCHMARK_MAIN();
