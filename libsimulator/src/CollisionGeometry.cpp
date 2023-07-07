@@ -139,6 +139,24 @@ bool CollisionGeometry::IntersectsAny(LineSegment linesegment) const
     return false;
 }
 
+bool CollisionGeometry::IntersectsAnySet(LineSegment linesegment) const
+{
+    const auto cellsToQuery = cellsFromLineSegment(linesegment);
+    for(const auto& cell : cellsToQuery) {
+        const auto iter = _grid.find(cell);
+        if(iter == std::end(_grid)) {
+            continue;
+        }
+        if(std::find_if(
+               iter->second.cbegin(), iter->second.cend(), [&linesegment](const auto candidate) {
+                   return intersects(linesegment, candidate);
+               }) != iter->second.end()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CollisionGeometry::InsideGeometry(Point p) const
 {
     return CGAL::oriented_side(Kernel::Point_2(p.x, p.y), _accessibleArea) ==

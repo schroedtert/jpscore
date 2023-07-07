@@ -121,6 +121,7 @@ public:
     /// @param linesegment to test for intersection with geometry
     /// @return if any linesegment of the geometry was intersected.
     bool IntersectsAny(LineSegment linesegment) const;
+    bool IntersectsAnySet(LineSegment linesegment) const;
 
     bool InsideGeometry(Point p) const;
 };
