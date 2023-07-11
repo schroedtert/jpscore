@@ -142,37 +142,35 @@ bool CollisionGeometry::IntersectsAny(LineSegment linesegment) const
 bool CollisionGeometry::IntersectsAnySet(LineSegment linesegment) const
 {
     const auto cellsToQuery = cellsFromLineSegment(linesegment);
+    std::set<LineSegment> segments{};
     for(const auto& cell : cellsToQuery) {
         const auto iter = _grid.find(cell);
         if(iter == std::end(_grid)) {
             continue;
         }
-        if(std::find_if(
-               iter->second.cbegin(), iter->second.cend(), [&linesegment](const auto candidate) {
-                   return intersects(linesegment, candidate);
-               }) != iter->second.end()) {
-            return true;
-        }
+        segments.insert(std::begin(iter->second), std::end(iter->second));
     }
-    return false;
+    return std::find_if(segments.cbegin(), segments.cend(), [&linesegment](const auto candidate) {
+               return intersects(linesegment, candidate);
+           }) != segments.end();
+
 }
 
-bool CollisionGeometry::IntersectsAnySet(LineSegment linesegment) const
+bool CollisionGeometry::IntersectsAnyVector(LineSegment linesegment) const
 {
     const auto cellsToQuery = cellsFromLineSegment(linesegment);
+    std::vector<LineSegment> segments{};
     for(const auto& cell : cellsToQuery) {
         const auto iter = _grid.find(cell);
         if(iter == std::end(_grid)) {
             continue;
         }
-        if(std::find_if(
-               iter->second.cbegin(), iter->second.cend(), [&linesegment](const auto candidate) {
-                   return intersects(linesegment, candidate);
-               }) != iter->second.end()) {
-            return true;
-        }
+        segments.insert(std::end(segments), std::begin(iter->second), std::end(iter->second));
     }
-    return false;
+    return std::find_if(segments.cbegin(), segments.cend(), [&linesegment](const auto candidate) {
+               return intersects(linesegment, candidate);
+           }) != segments.end();
+
 }
 
 bool CollisionGeometry::InsideGeometry(Point p) const
