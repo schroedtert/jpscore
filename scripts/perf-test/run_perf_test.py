@@ -1,9 +1,10 @@
 import argparse
+import logging
 import pathlib
 import shutil
-import logging
-import docker
 import tarfile
+
+import docker
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -54,14 +55,23 @@ In the process following steps are taken:
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("-o", "--output", help="output directory", type=pathlib.Path)
-    parser.add_argument("-s", "--source", help="source directory of JuPedSim", type=pathlib.Path)
+    parser.add_argument(
+        "-o", "--output", help="output directory", type=pathlib.Path
+    )
+    parser.add_argument(
+        "-s",
+        "--source",
+        help="source directory of JuPedSim",
+        type=pathlib.Path,
+    )
 
     known, forwarded_args = parser.parse_known_args()
     if forwarded_args and forwarded_args[0] != "--":
-        logging.warning(f"found unknown arguments: '{' '.join(forwarded_args)}' will be ignored. If you want to pass "
-                        f"them to the container, separate them with '--', e.g., \n"
-                        f"$ python run_perf_test.py -- -t large_street_network -- --limit 10000")
+        logging.warning(
+            f"found unknown arguments: '{' '.join(forwarded_args)}' will be ignored. If you want to pass "
+            f"them to the container, separate them with '--', e.g., \n"
+            f"$ python run_perf_test.py -- -t large_street_network -- --limit 10000"
+        )
 
     else:
         forwarded_args = forwarded_args[1:]
@@ -76,8 +86,8 @@ def build_docker_container(client, source_dir: pathlib.Path):
         tag=perf_container_tag,
     )
     for chunk in build_logs:
-        if 'stream' in chunk:
-            for line in chunk['stream'].splitlines():
+        if "stream" in chunk:
+            for line in chunk["stream"].splitlines():
                 logging.info(line)
 
     return perf_test_image
@@ -112,7 +122,10 @@ def main():
         privileged=True,
         cap_add=["CAP_PERFMON"],
         volumes={
-            str(pathlib.Path(parsed_args.source).absolute()): {"bind": "/src", "mode": "ro"},
+            str(pathlib.Path(parsed_args.source).absolute()): {
+                "bind": "/src",
+                "mode": "ro",
+            },
         },
         detach=True,
         name="perf-container-python",
@@ -122,10 +135,10 @@ def main():
     # print the output from the container
     output = container.attach(stdout=True, stream=True, logs=True)
     for line in output:
-        print(line.decode('utf-8').strip())
+        print(line.decode("utf-8").strip())
 
     get_results(container, parsed_args.output)
-    
+
     container.remove()
 
 
