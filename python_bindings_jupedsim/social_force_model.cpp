@@ -143,7 +143,7 @@ void init_social_force_model(py::module_& m)
                 JPS_SocialForceModelState_SetObstacleScale(w.handle, obstacleScale);
             })
         .def_property(
-            "ForceDistance",
+            "forceDistance",
             [](const JPS_SocialForceModelState_Wrapper& w) {
                 return JPS_SocialForceModelState_GetForceDistance(w.handle);
             },
